@@ -2,27 +2,27 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
   <channel>
     <title>blog.flxzt.net</title>
-    <link>http://blog.flxzt.net/</link>
+    <link>https://blog.flxzt.net/</link>
     <description>Recent content on blog.flxzt.net</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sat, 05 Mar 2022 13:02:05 +0000</lastBuildDate><atom:link href="http://blog.flxzt.net/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Sat, 05 Mar 2022 13:02:05 +0000</lastBuildDate><atom:link href="https://blog.flxzt.net/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>About</title>
-      <link>http://blog.flxzt.net/about/</link>
+      <link>https://blog.flxzt.net/about/</link>
       <pubDate>Sat, 05 Mar 2022 17:04:48 +0000</pubDate>
       
-      <guid>http://blog.flxzt.net/about/</guid>
+      <guid>https://blog.flxzt.net/about/</guid>
       <description>write me an email: flxzt [at] posteo [dot] de
 my SSH fingerprint: 6d:6a:7e:df:d0:e5:51:6b:aa:37:80:9f:4a:3d:0e:1e</description>
     </item>
     
     <item>
       <title>Hello_world</title>
-      <link>http://blog.flxzt.net/posts/hello_world/</link>
+      <link>https://blog.flxzt.net/posts/hello_world/</link>
       <pubDate>Sat, 05 Mar 2022 13:02:05 +0000</pubDate>
       
-      <guid>http://blog.flxzt.net/posts/hello_world/</guid>
+      <guid>https://blog.flxzt.net/posts/hello_world/</guid>
       <description>Hallo Welt!
 fn main() {  println!(&amp;#34;hello world&amp;#34;); } </description>
     </item>

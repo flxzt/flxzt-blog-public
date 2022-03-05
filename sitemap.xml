@@ -2,20 +2,20 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>http://blog.flxzt.net/about/</loc>
+    <loc>https://blog.flxzt.net/about/</loc>
     <lastmod>2022-03-05T17:04:48+00:00</lastmod>
   </url><url>
-    <loc>http://blog.flxzt.net/</loc>
+    <loc>https://blog.flxzt.net/</loc>
     <lastmod>2022-03-05T13:02:05+00:00</lastmod>
   </url><url>
-    <loc>http://blog.flxzt.net/posts/hello_world/</loc>
+    <loc>https://blog.flxzt.net/posts/hello_world/</loc>
     <lastmod>2022-03-05T13:02:05+00:00</lastmod>
   </url><url>
-    <loc>http://blog.flxzt.net/posts/</loc>
+    <loc>https://blog.flxzt.net/posts/</loc>
     <lastmod>2022-03-05T13:02:05+00:00</lastmod>
   </url><url>
-    <loc>http://blog.flxzt.net/categories/</loc>
+    <loc>https://blog.flxzt.net/categories/</loc>
   </url><url>
-    <loc>http://blog.flxzt.net/tags/</loc>
+    <loc>https://blog.flxzt.net/tags/</loc>
   </url>
 </urlset>
