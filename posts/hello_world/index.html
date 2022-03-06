@@ -5,9 +5,9 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <meta name="robots" content="index, follow">
-<title>Hello_world | blog.flxzt.net</title>
+<title>hello_world | blog.flxzt.net</title>
 <meta name="keywords" content="" />
-<meta name="description" content="Hallo Welt!
+<meta name="description" content="Es gibt für alles ein erstes Mal.
 fn main() {  println!(&#34;hello world&#34;); } ">
 <meta name="author" content="">
 <link rel="canonical" href="https://blog.flxzt.net/posts/hello_world/" />
@@ -58,8 +58,8 @@ fn main() {  println!(&#34;hello world&#34;); } ">
         }
 
     </style>
-</noscript><meta property="og:title" content="Hello_world" />
-<meta property="og:description" content="Hallo Welt!
+</noscript><meta property="og:title" content="hello_world" />
+<meta property="og:description" content="Es gibt für alles ein erstes Mal.
 fn main() {  println!(&#34;hello world&#34;); } " />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="https://blog.flxzt.net/posts/hello_world/" /><meta property="article:section" content="posts" />
@@ -67,8 +67,8 @@ fn main() {  println!(&#34;hello world&#34;); } " />
 <meta property="article:modified_time" content="2022-03-05T13:02:05&#43;00:00" />
 
 <meta name="twitter:card" content="summary"/>
-<meta name="twitter:title" content="Hello_world"/>
-<meta name="twitter:description" content="Hallo Welt!
+<meta name="twitter:title" content="hello_world"/>
+<meta name="twitter:description" content="Es gibt für alles ein erstes Mal.
 fn main() {  println!(&#34;hello world&#34;); } "/>
 
 
@@ -86,7 +86,7 @@ fn main() {  println!(&#34;hello world&#34;); } "/>
     {
       "@type": "ListItem",
       "position":  2 ,
-      "name": "Hello_world",
+      "name": "hello_world",
       "item": "https://blog.flxzt.net/posts/hello_world/"
     }
   ]
@@ -96,14 +96,14 @@ fn main() {  println!(&#34;hello world&#34;); } "/>
 {
   "@context": "https://schema.org",
   "@type": "BlogPosting",
-  "headline": "Hello_world",
-  "name": "Hello_world",
-  "description": "Hallo Welt!\nfn main() {  println!(\u0026#34;hello world\u0026#34;); } ",
+  "headline": "hello_world",
+  "name": "hello_world",
+  "description": "Es gibt für alles ein erstes Mal.\nfn main() {  println!(\u0026#34;hello world\u0026#34;); } ",
   "keywords": [
     
   ],
-  "articleBody": "Hallo Welt!\nfn main() {  println!(\"hello world\"); } ",
-  "wordCount" : "8",
+  "articleBody": "Es gibt für alles ein erstes Mal.\nfn main() {  println!(\"hello world\"); } ",
+  "wordCount" : "13",
   "inLanguage": "en",
   "datePublished": "2022-03-05T13:02:05Z",
   "dateModified": "2022-03-05T13:02:05Z",
@@ -177,13 +177,13 @@ fn main() {  println!(&#34;hello world&#34;); } "/>
   <header class="post-header">
     
     <h1 class="post-title">
-      Hello_world
+      hello_world
     </h1>
     <div class="post-meta"><span title='2022-03-05 13:02:05 +0000 UTC'>March 5, 2022</span>
 
 </div>
   </header> 
-  <div class="post-content"><p>Hallo Welt!</p>
+  <div class="post-content"><p>Es gibt für alles ein erstes Mal.</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Rust" data-lang="Rust"><span style="display:flex;"><span><span style="color:#66d9ef">fn</span> <span style="color:#a6e22e">main</span>() {
 </span></span><span style="display:flex;"><span>    println!(<span style="color:#e6db74">&#34;hello world&#34;</span>);
 </span></span><span style="display:flex;"><span>}
@@ -263,6 +263,53 @@ fn main() {  println!(&#34;hello world&#34;); } "/>
         }
     })
 
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerText = 'copy';
+
+        function copyingDone() {
+            copybutton.innerText = 'copied!';
+            setTimeout(() => {
+                copybutton.innerText = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
 </script>
 </body>
 
