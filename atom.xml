@@ -153,6 +153,7 @@ of time.&lt;&#x2F;p&gt;
 &lt;p&gt;stay tuned for another post that shows the implementation as a no-std, no-alloc Rust library with integration into an
 existing STM32 C-based project. It will also show how HID keyboard reports are sent when a gesture is recognized, and
 how to debug the Rust library on an STM32-F4 MCU.&lt;&#x2F;p&gt;
+&lt;p&gt;The code (a STM32CubeIDE project) is already available &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;flxzt&#x2F;gestures_w_rust&quot;&gt;here&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
 </content>
         
     </entry>
