@@ -2,8 +2,8 @@
 <feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
     <title>blog.flxzt.net</title>
     <subtitle>My personal blog</subtitle>
-    <link rel="self" type="application/atom+xml" href="https://blog.flxzt.net/atom.xml"/>
-    <link rel="alternate" type="text/html" href="https://blog.flxzt.net/"/>
+    <link href="https://blog.flxzt.net/atom.xml" rel="self" type="application/atom+xml"/>
+    <link href="https://blog.flxzt.net/"/>
     <generator uri="https://www.getzola.org/">Zola</generator>
     <updated>2022-12-18T00:00:00+00:00</updated>
     <id>https://blog.flxzt.net/atom.xml</id>
@@ -11,19 +11,13 @@
         <title>Motion &amp; Gesture Recognition for low-res TOF-Sensors</title>
         <published>2022-12-18T00:00:00+00:00</published>
         <updated>2022-12-18T00:00:00+00:00</updated>
-        
         <author>
-          <name>
-            
-              Unknown
-            
-          </name>
+          <name>Unknown</name>
         </author>
-        
-        <link rel="alternate" type="text/html" href="https://blog.flxzt.net/posts/gesture-recognition/"/>
+        <link rel="alternate" href="https://blog.flxzt.net/posts/gesture-recognition/" type="text/html"/>
         <id>https://blog.flxzt.net/posts/gesture-recognition/</id>
         
-        <content type="html" xml:base="https://blog.flxzt.net/posts/gesture-recognition/">&lt;h1 id=&quot;motivation&quot;&gt;Motivation&lt;&#x2F;h1&gt;
+        <content type="html">&lt;h1 id=&quot;motivation&quot;&gt;Motivation&lt;&#x2F;h1&gt;
 &lt;p&gt;Low-cost Time-Of-Flight sensors like the &amp;quot;ST VL53L5CX&amp;quot; usually have low resolution SPAD arrays (e.g. 4x4 or 8x8) with
 individual zones, each measuring a distance to an object located in a section of the FOV of the sensor.
 These measurement can be processed on a MCU like a STM32 to recognize motion and gestures. For this purpose I created a
@@ -167,19 +161,13 @@ how to debug the Rust library on an STM32-F4 MCU.&lt;&#x2F;p&gt;
         <title>TinyUSB on STM32 MCU&#x27;s with STM32CubeIDE</title>
         <published>2022-08-28T00:00:00+00:00</published>
         <updated>2022-08-28T00:00:00+00:00</updated>
-        
         <author>
-          <name>
-            
-              Unknown
-            
-          </name>
+          <name>Unknown</name>
         </author>
-        
-        <link rel="alternate" type="text/html" href="https://blog.flxzt.net/posts/tinyusb-w-stm32cubeide/"/>
+        <link rel="alternate" href="https://blog.flxzt.net/posts/tinyusb-w-stm32cubeide/" type="text/html"/>
         <id>https://blog.flxzt.net/posts/tinyusb-w-stm32cubeide/</id>
         
-        <content type="html" xml:base="https://blog.flxzt.net/posts/tinyusb-w-stm32cubeide/">&lt;p&gt;When using the USB peripheral on STM32 MCU&#x27;s, you can choose between the vendor-provided USB stack and a third-party
+        <content type="html">&lt;p&gt;When using the USB peripheral on STM32 MCU&#x27;s, you can choose between the vendor-provided USB stack and a third-party
 one like &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;hathach&#x2F;tinyusb&quot;&gt;TinyUSB&lt;&#x2F;a&gt;. The vendor-provided is inconvenient to use because even though
 it provides a selection of predefined classes, the code generation always overwrites any changes one might need to make
 to the stack to customize it or even to fix bugs in the implementation.
@@ -430,19 +418,13 @@ Then, whenever something is typed into one of the terminals it should be echoed 
         <title>hello_world</title>
         <published>2022-01-02T00:00:00+00:00</published>
         <updated>2022-01-02T00:00:00+00:00</updated>
-        
         <author>
-          <name>
-            
-              Unknown
-            
-          </name>
+          <name>Unknown</name>
         </author>
-        
-        <link rel="alternate" type="text/html" href="https://blog.flxzt.net/posts/hello-world/"/>
+        <link rel="alternate" href="https://blog.flxzt.net/posts/hello-world/" type="text/html"/>
         <id>https://blog.flxzt.net/posts/hello-world/</id>
         
-        <content type="html" xml:base="https://blog.flxzt.net/posts/hello-world/">&lt;p&gt;Hallo Welt!&lt;&#x2F;p&gt;
+        <content type="html">&lt;p&gt;Hallo Welt!&lt;&#x2F;p&gt;
 &lt;pre data-lang=&quot;rust&quot; style=&quot;background-color:#0f1419;color:#bfbab0;&quot; class=&quot;language-rust &quot;&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;main&lt;&#x2F;span&gt;&lt;span&gt;() {
 &lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f07178;&quot;&gt;println!&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;quot;hello world&amp;quot;&lt;&#x2F;span&gt;&lt;span&gt;)&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;;
 &lt;&#x2F;span&gt;&lt;span&gt;}
@@ -454,19 +436,13 @@ Then, whenever something is typed into one of the terminals it should be echoed 
         <title>Markdown Syntax</title>
         <published>2022-01-01T00:00:00+00:00</published>
         <updated>2022-01-01T00:00:00+00:00</updated>
-        
         <author>
-          <name>
-            
-              Unknown
-            
-          </name>
+          <name>Unknown</name>
         </author>
-        
-        <link rel="alternate" type="text/html" href="https://blog.flxzt.net/posts/markdown-syntax/"/>
+        <link rel="alternate" href="https://blog.flxzt.net/posts/markdown-syntax/" type="text/html"/>
         <id>https://blog.flxzt.net/posts/markdown-syntax/</id>
         
-        <content type="html" xml:base="https://blog.flxzt.net/posts/markdown-syntax/">&lt;p&gt;Taken from &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;thephpleague&#x2F;commonmark&#x2F;blob&#x2F;2.3&#x2F;tests&#x2F;benchmark&#x2F;sample.md&quot;&gt;github.com&#x2F;thephpleague&#x2F;commonmark&#x2F;blob&#x2F;2.3&#x2F;tests&#x2F;benchmark&#x2F;sample.md&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+        <content type="html">&lt;p&gt;Taken from &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;thephpleague&#x2F;commonmark&#x2F;blob&#x2F;2.3&#x2F;tests&#x2F;benchmark&#x2F;sample.md&quot;&gt;github.com&#x2F;thephpleague&#x2F;commonmark&#x2F;blob&#x2F;2.3&#x2F;tests&#x2F;benchmark&#x2F;sample.md&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
 &lt;h2 id=&quot;overview&quot;&gt;Overview&lt;&#x2F;h2&gt;
 &lt;h3 id=&quot;philosophy&quot;&gt;Philosophy&lt;&#x2F;h3&gt;
 &lt;p&gt;Markdown is intended to be as easy-to-read and easy-to-write as is feasible.&lt;&#x2F;p&gt;
