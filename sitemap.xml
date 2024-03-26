@@ -44,6 +44,9 @@
         <loc>https://blog.flxzt.net/projects/splot/</loc>
     </url>
     <url>
+        <loc>https://blog.flxzt.net/projects/vecdisp/</loc>
+    </url>
+    <url>
         <loc>https://blog.flxzt.net/projects/wave/</loc>
     </url>
     <url>
@@ -65,6 +68,12 @@
         <loc>https://blog.flxzt.net/tags/handwriting/</loc>
     </url>
     <url>
+        <loc>https://blog.flxzt.net/tags/hardware/</loc>
+    </url>
+    <url>
+        <loc>https://blog.flxzt.net/tags/linux/</loc>
+    </url>
+    <url>
         <loc>https://blog.flxzt.net/tags/math/</loc>
     </url>
     <url>
@@ -81,6 +90,9 @@
     </url>
     <url>
         <loc>https://blog.flxzt.net/tags/stm32/</loc>
+    </url>
+    <url>
+        <loc>https://blog.flxzt.net/tags/systemd/</loc>
     </url>
     <url>
         <loc>https://blog.flxzt.net/tags/test/</loc>
