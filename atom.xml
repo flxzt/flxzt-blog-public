@@ -49,7 +49,7 @@ r: \text{distance to the origin}\newline
 \phi \text{(phi): angle to y-axis (zenith)}\newline
 \end{pmatrix}
 $$&lt;&#x2F;p&gt;
-&lt;p&gt;&lt;a href=&quot;https:&#x2F;&#x2F;blog.flxzt.net&#x2F;posts&#x2F;gesture-recognition&#x2F;.&#x2F;coordinates.svg&quot;&gt;&lt;img src=&quot;https:&#x2F;&#x2F;blog.flxzt.net&#x2F;posts&#x2F;gesture-recognition&#x2F;.&#x2F;coordinates.svg&quot; alt=&quot;&quot; &#x2F;&gt;&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;a href=&quot;https:&#x2F;&#x2F;blog.flxzt.net&#x2F;posts&#x2F;gesture-recognition&#x2F;.&#x2F;assets&#x2F;coordinates.svg&quot;&gt;&lt;img src=&quot;https:&#x2F;&#x2F;blog.flxzt.net&#x2F;posts&#x2F;gesture-recognition&#x2F;.&#x2F;assets&#x2F;coordinates.svg&quot; alt=&quot;&quot; &#x2F;&gt;&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
 &lt;p&gt;This spherical notation is the mathematical convention.&lt;br &#x2F;&gt;
 (reference: &lt;a href=&quot;https:&#x2F;&#x2F;mathworld.wolfram.com&#x2F;SphericalCoordinates.html&quot;&gt;mathworld.wolfram.com&#x2F;SphericalCoordinates.html&lt;&#x2F;a&gt;)&lt;&#x2F;p&gt;
 &lt;h2 id=&quot;conversion&quot;&gt;Conversion&lt;&#x2F;h2&gt;
@@ -72,7 +72,7 @@ $$&lt;&#x2F;p&gt;
 &lt;h1 id=&quot;sensor-grid&quot;&gt;Sensor Grid&lt;&#x2F;h1&gt;
 &lt;aside style=&quot;max-width: 50%;&quot;&gt;
     &lt;div class=&quot;aside-inner&quot;&gt;
-        &lt;a href=&quot;.&#x2F;sensor_grid.svg&quot;&gt;&lt;img src=&quot;.&#x2F;sensor_grid.svg&quot; alt=&quot;&quot; &#x2F;&gt;&lt;&#x2F;a&gt;
+        &lt;a href=&quot;.&#x2F;assets&#x2F;sensor_grid.svg&quot;&gt;&lt;img src=&quot;.&#x2F;assets&#x2F;sensor_grid.svg&quot; alt=&quot;&quot; &#x2F;&gt;&lt;&#x2F;a&gt;
     &lt;&#x2F;div&gt;
 &lt;&#x2F;aside&gt;
 &lt;p&gt;We have for each zone:&lt;&#x2F;p&gt;
@@ -144,14 +144,14 @@ threshold.&lt;&#x2F;p&gt;
 &lt;p&gt;To detect swipes, we look at the measurements newer than a specified time (ca 600ms) and look if the object position has
 moved horizontally more than a certain distance. To make this more robust, we only recognize the gesture if the object
 also has not moved much towards or away from the sensor.&lt;&#x2F;p&gt;
-&lt;p&gt;&lt;a href=&quot;https:&#x2F;&#x2F;blog.flxzt.net&#x2F;posts&#x2F;gesture-recognition&#x2F;.&#x2F;swipe_gesture.svg&quot;&gt;&lt;img src=&quot;https:&#x2F;&#x2F;blog.flxzt.net&#x2F;posts&#x2F;gesture-recognition&#x2F;.&#x2F;swipe_gesture.svg&quot; alt=&quot;&quot; &#x2F;&gt;&lt;&#x2F;a&gt;&lt;br &#x2F;&gt;
+&lt;p&gt;&lt;a href=&quot;https:&#x2F;&#x2F;blog.flxzt.net&#x2F;posts&#x2F;gesture-recognition&#x2F;.&#x2F;assets&#x2F;swipe_gesture.svg&quot;&gt;&lt;img src=&quot;https:&#x2F;&#x2F;blog.flxzt.net&#x2F;posts&#x2F;gesture-recognition&#x2F;.&#x2F;assets&#x2F;swipe_gesture.svg&quot; alt=&quot;&quot; &#x2F;&gt;&lt;&#x2F;a&gt;&lt;br &#x2F;&gt;
 &lt;span class=&quot;caption&quot;&gt;
     The recognition of a swipe gesture
 &lt;&#x2F;span&gt;&lt;&#x2F;p&gt;
 &lt;h1 id=&quot;static-holds&quot;&gt;Static Holds&lt;&#x2F;h1&gt;
 &lt;p&gt;Static holds are determined when the object position has not changed above a distance threshold for a specified amount
 of time.&lt;&#x2F;p&gt;
-&lt;p&gt;&lt;a href=&quot;https:&#x2F;&#x2F;blog.flxzt.net&#x2F;posts&#x2F;gesture-recognition&#x2F;.&#x2F;hold_gesture.svg&quot;&gt;&lt;img src=&quot;https:&#x2F;&#x2F;blog.flxzt.net&#x2F;posts&#x2F;gesture-recognition&#x2F;.&#x2F;hold_gesture.svg&quot; alt=&quot;&quot; &#x2F;&gt;&lt;&#x2F;a&gt;&lt;br &#x2F;&gt;
+&lt;p&gt;&lt;a href=&quot;https:&#x2F;&#x2F;blog.flxzt.net&#x2F;posts&#x2F;gesture-recognition&#x2F;.&#x2F;assets&#x2F;hold_gesture.svg&quot;&gt;&lt;img src=&quot;https:&#x2F;&#x2F;blog.flxzt.net&#x2F;posts&#x2F;gesture-recognition&#x2F;.&#x2F;assets&#x2F;hold_gesture.svg&quot; alt=&quot;&quot; &#x2F;&gt;&lt;&#x2F;a&gt;&lt;br &#x2F;&gt;
 &lt;span class=&quot;caption&quot;&gt;
     The recognition of a hold gesture
 &lt;&#x2F;span&gt;&lt;&#x2F;p&gt;
@@ -188,7 +188,7 @@ its integration into STM32CubeIDE and the HAL is not straight-forward. Hence thi
 &lt;h1 id=&quot;stmcubemx-configuration&quot;&gt;STMCubeMX configuration&lt;&#x2F;h1&gt;
 &lt;aside style=&quot;max-width: 50%;&quot;&gt;
     &lt;div class=&quot;aside-inner&quot;&gt;
-        &lt;a href=&quot;.&#x2F;cubeide_config_usb_connectivity.png&quot;&gt;&lt;img src=&quot;.&#x2F;cubeide_config_usb_connectivity.png&quot; alt=&quot;&quot; &#x2F;&gt;&lt;&#x2F;a&gt;
+        &lt;a href=&quot;.&#x2F;assets&#x2F;cubeide_config_usb_connectivity.png&quot;&gt;&lt;img src=&quot;.&#x2F;assets&#x2F;cubeide_config_usb_connectivity.png&quot; alt=&quot;&quot; &#x2F;&gt;&lt;&#x2F;a&gt;
     &lt;&#x2F;div&gt;
 &lt;&#x2F;aside&gt;
 &lt;p&gt;TinyUSB uses the abstractions of the lower-level HAL for STM32 MCU&#x27;s. This is configured in CubeMX. First, the
@@ -216,7 +216,7 @@ time of writing):&lt;&#x2F;p&gt;
 &lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
 &lt;aside style=&quot;max-width: 50%;&quot;&gt;
     &lt;div class=&quot;aside-inner&quot;&gt;
-        &lt;a href=&quot;.&#x2F;cubeide_properties_tinyusb_include.png&quot;&gt;&lt;img src=&quot;.&#x2F;cubeide_properties_tinyusb_include.png&quot; alt=&quot;&quot; &#x2F;&gt;&lt;&#x2F;a&gt;
+        &lt;a href=&quot;.&#x2F;assets&#x2F;cubeide_properties_tinyusb_include.png&quot;&gt;&lt;img src=&quot;.&#x2F;assets&#x2F;cubeide_properties_tinyusb_include.png&quot; alt=&quot;&quot; &#x2F;&gt;&lt;&#x2F;a&gt;
     &lt;&#x2F;div&gt;
 &lt;&#x2F;aside&gt;
 &lt;p&gt;Then the linker and compiler need to be configured. First, open the projects properties window under
@@ -233,7 +233,7 @@ excluding its file with a filter. Select the added path and click on &lt;code&gt
 This disables the older driver, and the newer driver in &lt;code&gt;portable&#x2F;synopsys&#x2F;dwc2&#x2F;dcd_dwc2.c&lt;&#x2F;code&gt; gets used. By
 &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;hathach&#x2F;tinyusb&#x2F;discussions&#x2F;1436#discussioncomment-2592135&quot;&gt;developer comment&lt;&#x2F;a&gt; the older one will be
 removed at some point so this might not be necessary anymore in the future.&lt;&#x2F;p&gt;
-&lt;p&gt;&lt;a href=&quot;https:&#x2F;&#x2F;blog.flxzt.net&#x2F;posts&#x2F;tinyusb-w-stm32cubeide&#x2F;.&#x2F;cubeide_properties_tinyusb_source_location_w_filter.png&quot;&gt;&lt;img src=&quot;https:&#x2F;&#x2F;blog.flxzt.net&#x2F;posts&#x2F;tinyusb-w-stm32cubeide&#x2F;.&#x2F;cubeide_properties_tinyusb_source_location_w_filter.png&quot; alt=&quot;&quot; &#x2F;&gt;&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;a href=&quot;https:&#x2F;&#x2F;blog.flxzt.net&#x2F;posts&#x2F;tinyusb-w-stm32cubeide&#x2F;.&#x2F;assets&#x2F;cubeide_properties_tinyusb_source_location_w_filter.png&quot;&gt;&lt;img src=&quot;https:&#x2F;&#x2F;blog.flxzt.net&#x2F;posts&#x2F;tinyusb-w-stm32cubeide&#x2F;.&#x2F;assets&#x2F;cubeide_properties_tinyusb_source_location_w_filter.png&quot; alt=&quot;&quot; &#x2F;&gt;&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
 &lt;h1 id=&quot;code-cdc-dual-ports-example&quot;&gt;Code (CDC dual ports example)&lt;&#x2F;h1&gt;
 &lt;p&gt;To be able to use TinyUSB, it needs to be integrated in the existing code.
 For demonstration purposes the &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;hathach&#x2F;tinyusb&#x2F;tree&#x2F;master&#x2F;examples&#x2F;device&#x2F;cdc_dual_ports&quot;&gt;CDC dual ports example&lt;&#x2F;a&gt;
@@ -414,7 +414,7 @@ entries over e.g. UART, &lt;code&gt;_write()&lt;&#x2F;code&gt; can be overwritte
 &lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
 &lt;aside style=&quot;max-width: 70%;&quot;&gt;
     &lt;div class=&quot;aside-inner&quot;&gt;
-        &lt;a href=&quot;.&#x2F;cdc_example_works.png&quot;&gt;&lt;img src=&quot;.&#x2F;cdc_example_works.png&quot; alt=&quot;&quot; &#x2F;&gt;&lt;&#x2F;a&gt;
+        &lt;a href=&quot;.&#x2F;assets&#x2F;cdc_example_works.png&quot;&gt;&lt;img src=&quot;.&#x2F;assets&#x2F;cdc_example_works.png&quot; alt=&quot;&quot; &#x2F;&gt;&lt;&#x2F;a&gt;
     &lt;&#x2F;div&gt;
 &lt;&#x2F;aside&gt;
 &lt;p&gt;This is it! The code should now compile and run on the MCU. Once the USB peripheral is connected to the host,
