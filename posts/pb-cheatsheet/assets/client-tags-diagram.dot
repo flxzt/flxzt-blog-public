@@ -1,0 +1,37 @@
+graph G {
+    rankdir = LR;
+    subgraph cluster_windows {
+        graph [style="dashed",color="grey80"];
+        node [shape="box"];
+        label="Windows";
+        gnome_terminal [label="gnome-terminal"];
+        vscode [Label="VSCode"]
+    }
+    subgraph cluster_tags {
+        graph [style="dashed",color="grey80"];
+        node [shape="ellipse"];
+        label="Tags";
+        tag_shell [label="shell"];
+        tag_vim [label="vim"];
+        tag_coding [label="coding"];
+    }
+    subgraph cluster_cheatsheets {
+        graph [style="dashed",color="grey80"];
+        node [shape="box"];
+        label="Cheatsheets";
+        cheatsheet_vim_basics [label="Vim Basics"]
+        cheatsheet_vim_advanced [label="Vim Advanced"]
+        cheatsheet_bash [label="Bash"]
+        cheatsheet_c [label="C-Lang"]
+        cheatsheet_rust [label="Rust"]
+    }
+    gnome_terminal -- tag_shell
+    gnome_terminal -- tag_vim
+    vscode -- tag_shell
+    vscode -- tag_coding
+    tag_vim -- cheatsheet_vim_basics
+    tag_vim -- cheatsheet_vim_advanced
+    tag_shell -- cheatsheet_bash
+    tag_coding -- cheatsheet_rust
+    tag_coding -- cheatsheet_c
+}

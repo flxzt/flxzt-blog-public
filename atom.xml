@@ -5,8 +5,329 @@
     <link rel="self" type="application/atom+xml" href="https://blog.flxzt.net/atom.xml"/>
     <link rel="alternate" type="text/html" href="https://blog.flxzt.net/"/>
     <generator uri="https://www.getzola.org/">Zola</generator>
-    <updated>2022-12-18T00:00:00+00:00</updated>
+    <updated>2024-05-08T00:00:00+00:00</updated>
     <id>https://blog.flxzt.net/atom.xml</id>
+    <entry xml:lang="en">
+        <title>Dynamic Cheatsheets on Pocketbook E-Reader</title>
+        <published>2024-05-08T00:00:00+00:00</published>
+        <updated>2024-05-08T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              Unknown
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://blog.flxzt.net/posts/pb-cheatsheet/"/>
+        <id>https://blog.flxzt.net/posts/pb-cheatsheet/</id>
+        
+        <content type="html" xml:base="https://blog.flxzt.net/posts/pb-cheatsheet/">&lt;h1 id=&quot;motivation&quot;&gt;Motivation&lt;&#x2F;h1&gt;
+&lt;p&gt;My goal for this project was to repurpose my E-Reader device and write an application
+that dynamically displays cheatsheets based on the current focused window,
+acting as a special purpose second screen for mostly static content.
+The idea was to replace having to print cheatsheets and info cards
+for often used applications and tools like VSCode, Vim, Bash and so on.&lt;&#x2F;p&gt;
+&lt;p&gt;Pocketbook E-Reader devices are cool, because their firmware is Linux based and are,
+in comparison to other devices quite open.
+They allow creating custom applications with standard UNIX interfaces
+and additionally Pocketbook&#x27;s own SDK for drawing directly on the display, retrieving input
+and interacting with their services and utilities.&lt;&#x2F;p&gt;
+&lt;p&gt;Unfortunately the publicly available SDK seems to not be regularly updated, but it still works on recent firmware.
+The actual used pocketbook E-Reader is the
+&lt;a href=&quot;https:&#x2F;&#x2F;www.pocketbook-int.com&#x2F;ge&#x2F;products&#x2F;pocketbook-touch-lux-3&quot;&gt;Touch Lux 3&lt;&#x2F;a&gt; (PB626)
+which is now already quite old but still works fine.&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;setup-build-environment&quot;&gt;Setup &amp;amp; Build environment&lt;&#x2F;h1&gt;
+&lt;h2 id=&quot;bindings&quot;&gt;Bindings&lt;&#x2F;h2&gt;
+&lt;p&gt;The language of choice to write software for me is Rust.
+The &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;pocketbook&#x2F;SDK_6.3.0&quot;&gt;SDK&lt;&#x2F;a&gt; is written in C, so there is the need for bindings.
+Fortunately I am not treading on entirely new territory here.
+&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;simmsb&quot;&gt;Ben Simms&lt;&#x2F;a&gt; already created &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;simmsb&#x2F;inkview-rs&quot;&gt;inkview-rs&lt;&#x2F;a&gt;,
+a bindings crate that does bindings code generation through &lt;a href=&quot;https:&#x2F;&#x2F;crates.io&#x2F;crates&#x2F;bindgen&quot;&gt;bindgen&lt;&#x2F;a&gt;
+and can be used in combination with &lt;code&gt;cargo-zigbuild&lt;&#x2F;code&gt; to dynamically link the SDK with the built application.&lt;&#x2F;p&gt;
+&lt;p&gt;The bindings code is generated with bindgen&#x27;s &lt;code&gt;--dynamic-loading&lt;&#x2F;code&gt; flag,
+so the actual symbols are linked at runtime through the dynamic linker &lt;code&gt;ld&lt;&#x2F;code&gt;.
+No need to have a complicated build environment with a custom cross-compilation C toolchain for the SDK,
+linking &lt;code&gt;.a&lt;&#x2F;code&gt; files, and so on!&lt;&#x2F;p&gt;
+&lt;p&gt;Because of that, remote development really is free of pain.
+Simply adding the &lt;code&gt;armv7-unknown-linux-gnueabi&lt;&#x2F;code&gt; target to cargo and then executing
+&lt;code&gt;cargo zigbuild --target armv7-unknown-linux-gnueabi.2.23&lt;&#x2F;code&gt; cross-compiles to &lt;code&gt;armv7&lt;&#x2F;code&gt;
+with a specific glibc version that matches the one present on the Pocketbook device.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;rooting-ssh&quot;&gt;Rooting &amp;amp; SSH&lt;&#x2F;h2&gt;
+&lt;p&gt;By default it is not possible to run programs with root permissions on the pocketbook device.
+However, because the firmware uses an old kernel version that is vulnerable to the &amp;quot;Mad-COW&amp;quot; exploit
+it is possible to &amp;quot;jailbreak&amp;quot; and install a root shell.
+The &lt;code&gt;pbjb&lt;&#x2F;code&gt; application has a guide in the &amp;quot;low-level-internals&amp;quot; section in the
+&lt;a href=&quot;https:&#x2F;&#x2F;www.mobileread.com&#x2F;forums&#x2F;showthread.php?t=325185&quot;&gt;mobileread forum thread&lt;&#x2F;a&gt; to do that.
+After that programs with root permissions can be launched through &lt;code&gt;&#x2F;mnt&#x2F;secure&#x2F;su&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;Now I could launch a SSH server with a script &lt;code&gt;ssh-dropbear.app&lt;&#x2F;code&gt; that executes &lt;code&gt;dropbear&lt;&#x2F;code&gt; like:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#0f1419;color:#bfbab0;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;#!&#x2F;bin&#x2F;sh
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;&#x2F;mnt&#x2F;secure&#x2F;su&lt;&#x2F;span&gt;&lt;span&gt; &#x2F;sbin&#x2F;dropbear&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt; -p&lt;&#x2F;span&gt;&lt;span&gt; 2468&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt; -G &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;quot;&amp;quot;
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;The installed dropbear version does not accept all key algorithms though, I personally had trouble connecting at first.
+After some research, I came up with this SSH config that should work in most cases:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#0f1419;color:#bfbab0;&quot;&gt;&lt;code&gt;&lt;span&gt;Host pocketbook
+&lt;&#x2F;span&gt;&lt;span&gt;  HostName &amp;lt;device-ip&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;  Port 2468
+&lt;&#x2F;span&gt;&lt;span&gt;  User root
+&lt;&#x2F;span&gt;&lt;span&gt;  HostKeyAlgorithms +ssh-rsa
+&lt;&#x2F;span&gt;&lt;span&gt;  PubKeyAcceptedAlgorithms +ssh-rsa
+&lt;&#x2F;span&gt;&lt;span&gt;  PubkeyAuthentication=no
+&lt;&#x2F;span&gt;&lt;span&gt;  StrictHostKeyChecking=no
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;The SSH server should not be launched when the device is connected to non-trusted networks though
+because anyone could connect to it as root without any authentication.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;app-transfer&quot;&gt;App transfer&lt;&#x2F;h2&gt;
+&lt;p&gt;Applications with the file suffix &lt;code&gt;.app&lt;&#x2F;code&gt; placed into the &lt;code&gt;&#x2F;mnt&#x2F;ext1&#x2F;applications&lt;&#x2F;code&gt; directory (that appears as only
+&lt;code&gt;applications&lt;&#x2F;code&gt; when the device is connected through USB) are automatically shown in the applications launcher.
+They can be binaries, but also shell scripts. This is very useful to create some tools to make the development easier.&lt;&#x2F;p&gt;
+&lt;p&gt;To iterate fast I wanted to be able to transfer the built application to the device
+without any physical tasks like plugging a USB-cable in and out.&lt;&#x2F;p&gt;
+&lt;p&gt;To do that I utilized &lt;code&gt;netcat&lt;&#x2F;code&gt;, a tool for creating ad-hoc network sockets and transmit arbitrary data over them.
+The tool is already present on the device, so I only needed to create scripts for the developer machine &amp;amp; device
+that send and receive applications.&lt;&#x2F;p&gt;
+&lt;div style=&quot;display: grid; grid-template-columns: 50% 50%; column-gap: 12px;&quot;&gt;
+&lt;div style=&quot;grid-column: 1&quot;&gt;
+Sender:
+&lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#0f1419;color:#bfbab0;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;color:#f07178;&quot;&gt;echo &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;quot;Sending application name..&amp;quot;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f07178;&quot;&gt;echo &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;&amp;lt;&lt;&#x2F;span&gt;&lt;span&gt;app-name&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;&amp;gt; | &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;nc &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;&amp;lt;&lt;&#x2F;span&gt;&lt;span&gt;device-ip&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;&amp;gt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt;19991
+&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;# The e-reader needs a bit of time to re-launch &amp;#39;nc&amp;#39;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;sleep&lt;&#x2F;span&gt;&lt;span&gt; 3
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f07178;&quot;&gt;echo &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;quot;Sending application content..&amp;quot;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;nc &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;&amp;lt;&lt;&#x2F;span&gt;&lt;span&gt;device-ip&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;&amp;gt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt;19991 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;&amp;lt;&lt;&#x2F;span&gt;&lt;span&gt; &#x2F;local&#x2F;path&#x2F;to&#x2F;binary
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;&#x2F;div&gt;
+&lt;div style=&quot;grid-column: 2&quot;&gt;
+Receiver:
+&lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#0f1419;color:#bfbab0;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;color:#f07178;&quot;&gt;echo &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;quot;Listening for application name..&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;LOCAL_APP_NAME&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;$&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;nc&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt; -l -p&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt; 19991 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;| &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;tr&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt; -d &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;#39; &amp;#39;&lt;&#x2F;span&gt;&lt;span&gt;)
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f07178;&quot;&gt;echo &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;quot;Received application name : &amp;#39;$&lt;&#x2F;span&gt;&lt;span&gt;LOCAL_APP_NAME&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;#39;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;LOCAL_APP_PATH&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;quot;&#x2F;mnt&#x2F;ext1&#x2F;applications&#x2F;$&lt;&#x2F;span&gt;&lt;span&gt;LOCAL_APP_NAME&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f07178;&quot;&gt;echo &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;quot;Listening for application content..&amp;quot;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;nc&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt; -l -p&lt;&#x2F;span&gt;&lt;span&gt; 19991 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;&amp;gt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;quot;$&lt;&#x2F;span&gt;&lt;span&gt;LOCAL_APP_PATH&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f07178;&quot;&gt;echo &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;quot;Application has been saved to &amp;#39;$&lt;&#x2F;span&gt;&lt;span&gt;LOCAL_APP_PATH&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;#39;&amp;quot;
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+&lt;h2 id=&quot;debugging&quot;&gt;Debugging&lt;&#x2F;h2&gt;
+&lt;p&gt;I also wanted to debug remotely with gdb.
+This is possible by: in a SSH session, launching a &lt;code&gt;gdbserver&lt;&#x2F;code&gt; session with command
+&lt;code&gt;gdbserver 0.0.0.0:10003 &#x2F;mnt&#x2F;ext1&#x2F;applications&#x2F;&amp;lt;app-name&amp;gt;.app&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;On the developer machine when using vscode for development,
+the extension &#x27;CodeLLDB&#x27; can be used for debugging Rust code.
+A &lt;code&gt;launch.json&lt;&#x2F;code&gt; configuration entry ended up looking like this:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;json&quot; style=&quot;background-color:#0f1419;color:#bfbab0;&quot; class=&quot;language-json &quot;&gt;&lt;code class=&quot;language-json&quot; data-lang=&quot;json&quot;&gt;&lt;span&gt;{
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;quot;type&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;quot;lldb&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;,
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;quot;request&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;quot;custom&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;,
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;quot;name&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;quot;remote debug &amp;lt;app-name&amp;gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;,
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;quot;targetCreateCommands&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;: &lt;&#x2F;span&gt;&lt;span&gt;[
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;quot;target create ${workspaceFolder}&#x2F;target&#x2F;armv7-unknown-linux-gnueabi&#x2F;debug&#x2F;examples&#x2F;&amp;lt;app-name&amp;gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;    ]&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;,
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;quot;processCreateCommands&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;: &lt;&#x2F;span&gt;&lt;span&gt;[
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;quot;gdb-remote &amp;lt;device-ip&amp;gt;:10003&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;    ]
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Now I could step through code, set breakpoints and so on.
+Of course it&#x27;s also possible to use the gdb CLI directly.&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;inkview-rs-improvements&quot;&gt;inkview-rs Improvements&lt;&#x2F;h1&gt;
+&lt;p&gt;The &lt;code&gt;inkview-rs&lt;&#x2F;code&gt; bindings crate needed additional features and fixes to satisfy my needs.
+For one, it needed to be extended to the SDK version &lt;code&gt;v5.19&lt;&#x2F;code&gt; that is supported on my device.
+Previously, only bindings for &lt;code&gt;v6.5&lt;&#x2F;code&gt; were generated.
+These API versions can now be switched through cargo features at compile time.&lt;&#x2F;p&gt;
+&lt;p&gt;I added additional safe rust wrappers for common tasks like a fast screen update and a wrapper for the dialog API.
+The library also previously had issues with an vertical draw offset which could be fixed
+by an setting a specific application flag through the pocketbook SDK.&lt;&#x2F;p&gt;
+&lt;p&gt;Additionally I added an adapter crate &lt;code&gt;inkview-eg&lt;&#x2F;code&gt; which implements the
+&lt;a href=&quot;https:&#x2F;&#x2F;docs.rs&#x2F;embedded-graphics-core&#x2F;latest&#x2F;embedded_graphics_core&#x2F;draw_target&#x2F;trait.DrawTarget.html&quot;&gt;embedded_graphics::DrawTarget&lt;&#x2F;a&gt;
+trait for the display.
+Doing that enables drawing with convenient API for graphics primitives and even things like text and bitmap images.&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;pb-cheatsheet-applications&quot;&gt;pb-cheatsheet Applications&lt;&#x2F;h1&gt;
+&lt;h2 id=&quot;overview&quot;&gt;Overview&lt;&#x2F;h2&gt;
+&lt;p&gt;Establishing a solid development environment and improvements to the inkview-rs library took a few weeks
+while working on-and-off on it.
+But after that I could focus on the &lt;code&gt;pb-cheatsheet&lt;&#x2F;code&gt; application itself.
+The code is entirely open-source under &#x27;GPLv3&#x27; and can be found &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;flxzt&#x2F;pb-cheatsheet&quot;&gt;here&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;The host is a CLI tool that is able to communicate with the GRPC server of the client.
+It should have the following features:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;ability to upload cheatsheets (images) to the client&lt;&#x2F;li&gt;
+&lt;li&gt;register&#x2F;delete associated tags&lt;&#x2F;li&gt;
+&lt;li&gt;retrieve device state&lt;&#x2F;li&gt;
+&lt;li&gt;ability to take screenshots and automatically upload them to the client&lt;&#x2F;li&gt;
+&lt;li&gt;continuously report the current focused window to the client&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;The client is a pocketbook specific application that holds and manages state and draws to the screen.
+For communication with the host it starts a GRPC server.
+It should possible to display some stats like the reported focused window by pressing the &lt;code&gt;Menu&lt;&#x2F;code&gt; button.
+It should also have three distinct modes as UI:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;Manual&lt;&#x2F;code&gt; : the user can manually cycle through the uploaded cheatsheets&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;code&gt;Automatic WM-Class&lt;&#x2F;code&gt; : display cheatsheets for which tags are registered that match with the tags
+registered to the reported focused window class.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;code&gt;Screenshot&lt;&#x2F;code&gt; : display the last uploaded screenshot&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;Now let&#x27;s get into the details of how all of this is actually implemented.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;host&quot;&gt;Host&lt;&#x2F;h2&gt;
+&lt;h3 id=&quot;cli&quot;&gt;CLI&lt;&#x2F;h3&gt;
+&lt;p&gt;The following commands are implemented:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#0f1419;color:#bfbab0;&quot;&gt;&lt;code&gt;&lt;span&gt;Usage: pb-cheatsheet-host --pb-grpc-addr &amp;lt;PB_GRPC_ADDR&amp;gt; &amp;lt;COMMAND&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;Commands:
+&lt;&#x2F;span&gt;&lt;span&gt;  report-focused-window   Continuously report focused window info to the client.
+&lt;&#x2F;span&gt;&lt;span&gt;                               Intended to be run as a service
+&lt;&#x2F;span&gt;&lt;span&gt;  get-screen-info         Get device screen info
+&lt;&#x2F;span&gt;&lt;span&gt;  get-cheatsheets-info    Get cheatsheets info
+&lt;&#x2F;span&gt;&lt;span&gt;  upload-cheatsheet       Upload a new chaetsheet that gets displayed when the added tags match the tags
+&lt;&#x2F;span&gt;&lt;span&gt;                               that are added to the wm class of the reported window.
+&lt;&#x2F;span&gt;&lt;span&gt;                               The image size is adjusted depending on the reported screen info of the client
+&lt;&#x2F;span&gt;&lt;span&gt;  remove-cheatsheet       Remove a cheatsheet
+&lt;&#x2F;span&gt;&lt;span&gt;  screenshot              Take a screenshot and upload it to the device for transient display
+&lt;&#x2F;span&gt;&lt;span&gt;  clear-screenshot        Clear the screenshot
+&lt;&#x2F;span&gt;&lt;span&gt;  add-cheatsheet-tags     Add cheatsheet tags
+&lt;&#x2F;span&gt;&lt;span&gt;  remove-cheatsheet-tags  Remove cheatsheet tags
+&lt;&#x2F;span&gt;&lt;span&gt;  add-wm-class-tags       Add wm class tags
+&lt;&#x2F;span&gt;&lt;span&gt;  remove-wm-class-tags    Remove wm class tags
+&lt;&#x2F;span&gt;&lt;span&gt;  help                    Print this message or the help of the given subcommand(s)
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;For example the output when fetching cheatsheet info looks like this: &lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;blog.flxzt.net&#x2F;posts&#x2F;pb-cheatsheet&#x2F;.&#x2F;assets&#x2F;host-get-cheatsheets-info.png&quot; alt=&quot;.&#x2F;assets&#x2F;host-get-cheatsheets-info.png&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;fetching-info&quot;&gt;Fetching Info&lt;&#x2F;h3&gt;
+&lt;p&gt;Retrieving the focused window is implemented only for the Gnome desktop environment,
+because unfortunately there is no universal Wayland protocol yet
+that would enable a desktop environment independent implementation.&lt;&#x2F;p&gt;
+&lt;p&gt;The Gnome extension &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;flexagoon&#x2F;focused-window-dbus&quot;&gt;focused-window-dbus&lt;&#x2F;a&gt; must also be
+installed. It reports the focused window through a DBus interface.&lt;&#x2F;p&gt;
+&lt;p&gt;The host application uses &lt;a href=&quot;https:&#x2F;&#x2F;crates.io&#x2F;crates&#x2F;zbus&quot;&gt;zbus&lt;&#x2F;a&gt; to fetch this info from the extension.
+The core Rust code to do that looks like this:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;rust&quot; style=&quot;background-color:#0f1419;color:#bfbab0;&quot; class=&quot;language-rust &quot;&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;#&lt;&#x2F;span&gt;&lt;span&gt;[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;proxy&lt;&#x2F;span&gt;&lt;span&gt;(
+&lt;&#x2F;span&gt;&lt;span&gt;    default_service &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;quot;org.gnome.Shell&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;,
+&lt;&#x2F;span&gt;&lt;span&gt;    default_path &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;quot;&#x2F;org&#x2F;gnome&#x2F;shell&#x2F;extensions&#x2F;FocusedWindow&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;,
+&lt;&#x2F;span&gt;&lt;span&gt;    interface &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;quot;org.gnome.shell.extensions.FocusedWindow&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;)]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;trait &lt;&#x2F;span&gt;&lt;span style=&quot;color:#59c2ff;&quot;&gt;FocusedWindow &lt;&#x2F;span&gt;&lt;span&gt;{
+&lt;&#x2F;span&gt;&lt;span&gt;    async &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;get&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;&amp;amp;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt;self&lt;&#x2F;span&gt;&lt;span&gt;) &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;-&amp;gt; &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#39bae6;&quot;&gt;Result&lt;&#x2F;span&gt;&lt;span&gt;&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#39bae6;&quot;&gt;String&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;;
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;pub&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;crate&lt;&#x2F;span&gt;&lt;span&gt;) async &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;get_focused_window_info&lt;&#x2F;span&gt;&lt;span&gt;&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;&amp;#39;a&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;(
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt;connection&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;&amp;amp;&lt;&#x2F;span&gt;&lt;span&gt;Connection,
+&lt;&#x2F;span&gt;&lt;span&gt;) &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;-&amp;gt; &lt;&#x2F;span&gt;&lt;span&gt;anyhow&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;::&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#39bae6;&quot;&gt;Result&lt;&#x2F;span&gt;&lt;span&gt;&amp;lt;FocusedWindowInfo&amp;gt; {
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; proxy &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span&gt;FocusedWindowProxy&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;::&lt;&#x2F;span&gt;&lt;span&gt;new(connection)&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;.&lt;&#x2F;span&gt;&lt;span&gt;await&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;?&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;;
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; val&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;: &lt;&#x2F;span&gt;&lt;span&gt;serde_json&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;::&lt;&#x2F;span&gt;&lt;span&gt;Value &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span&gt;serde_json&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;::&lt;&#x2F;span&gt;&lt;span&gt;from_str(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;&amp;amp;&lt;&#x2F;span&gt;&lt;span&gt;proxy&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f07178;&quot;&gt;get&lt;&#x2F;span&gt;&lt;span&gt;()&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;.&lt;&#x2F;span&gt;&lt;span&gt;await&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;?&lt;&#x2F;span&gt;&lt;span&gt;)&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;?&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;;
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;&#x2F;&#x2F; ...
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;h3 id=&quot;service&quot;&gt;Service&lt;&#x2F;h3&gt;
+&lt;p&gt;The &lt;code&gt;pb-cheatsheet-host report-focused-window&lt;&#x2F;code&gt; command continuously fetches info about the current focused window
+and reports it to the client over GRPC when it changes.&lt;&#x2F;p&gt;
+&lt;p&gt;This command can be a service that is started by systemd. A suitable &lt;code&gt;.service&lt;&#x2F;code&gt; file:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;toml&quot; style=&quot;background-color:#0f1419;color:#bfbab0;&quot; class=&quot;language-toml &quot;&gt;&lt;code class=&quot;language-toml&quot; data-lang=&quot;toml&quot;&gt;&lt;span&gt;[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#59c2ff;&quot;&gt;Unit&lt;&#x2F;span&gt;&lt;span&gt;]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#59c2ff;&quot;&gt;Description&lt;&#x2F;span&gt;&lt;span&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;quot;pb-cheatsheet-host focused window reporter&amp;quot;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#59c2ff;&quot;&gt;StartLimitIntervalSec&lt;&#x2F;span&gt;&lt;span&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt;0
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#59c2ff;&quot;&gt;StartLimitBurst&lt;&#x2F;span&gt;&lt;span&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt;0
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#59c2ff;&quot;&gt;Service&lt;&#x2F;span&gt;&lt;span&gt;]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#59c2ff;&quot;&gt;Environment&lt;&#x2F;span&gt;&lt;span&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;quot;PB_GRPC_ADDR=&amp;lt;client-ip:51151&amp;gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#59c2ff;&quot;&gt;Environment&lt;&#x2F;span&gt;&lt;span&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;quot;RUST_LOG=pb-cheatsheet-host=&amp;lt;log-level&amp;gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#59c2ff;&quot;&gt;ExecStart&lt;&#x2F;span&gt;&lt;span&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff3333;&quot;&gt;%h&#x2F;.cargo&#x2F;bin&#x2F;pb-cheatsheet-host report-focused-window
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#59c2ff;&quot;&gt;Restart&lt;&#x2F;span&gt;&lt;span&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff3333;&quot;&gt;on-failure
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#59c2ff;&quot;&gt;RestartSec&lt;&#x2F;span&gt;&lt;span&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt;30
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#59c2ff;&quot;&gt;Install&lt;&#x2F;span&gt;&lt;span&gt;]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#59c2ff;&quot;&gt;WantedBy&lt;&#x2F;span&gt;&lt;span&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff3333;&quot;&gt;default.target
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;h2 id=&quot;client&quot;&gt;Client&lt;&#x2F;h2&gt;
+&lt;p&gt;The client starts a GRPC server listening to incoming procedure call requests and messages.&lt;&#x2F;p&gt;
+&lt;p&gt;It does that in an asynchronous task, which sends messages over a channel to the handler. This handler also receives
+incoming messages from the pocketbook event main loop.
+Because the pocketbook SDK is not designed to be used in an async context, both &amp;quot;worlds&amp;quot;,
+async and blocking, have to be combined carefully.&lt;&#x2F;p&gt;
+&lt;p&gt;The client also holds some state about the cheatsheets, their tags and the UI.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;persistence&quot;&gt;Persistence&lt;&#x2F;h3&gt;
+&lt;p&gt;The cheatsheets and the metadata containing the tags are saved to disk whenever changes are made
+and when the app is closed.
+The populatd save directory looks like this:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;bash&quot; style=&quot;background-color:#0f1419;color:#bfbab0;&quot; class=&quot;language-bash &quot;&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;save_dir&#x2F;
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;wm_class_tags.json &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;# JSON file containing the tags that are associated with windows
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;cheatsheet_app_1.cs &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;# Raw cheatsheet image data about &amp;lt;app1&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;cheatsheet_app_1.json &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;# Metadata about &amp;lt;app1&amp;gt; cheatsheet containing associated tags
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;# ..
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;The metadata is saved as &lt;code&gt;json&lt;&#x2F;code&gt; with &lt;a href=&quot;https:&#x2F;&#x2F;crates.io&#x2F;crates&#x2F;serde&quot;&gt;serde&lt;&#x2F;a&gt;
+and &lt;a href=&quot;https:&#x2F;&#x2F;crates.io&#x2F;crates&#x2F;serde_json&quot;&gt;serde_json&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;For the cheatsheets images serde and &lt;a href=&quot;https:&#x2F;&#x2F;crates.io&#x2F;crates&#x2F;bincode&quot;&gt;bincode&lt;&#x2F;a&gt; is used for maximizing efficiency
+for raw image data.
+The images themselves are pre-converted to 8-bit grayscale and scaled the client display resolution on the host.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;dynamic-cheatsheets-using-tags&quot;&gt;Dynamic Cheatsheets using Tags&lt;&#x2F;h3&gt;
+&lt;p&gt;The tags system works like this:&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;a href=&quot;https:&#x2F;&#x2F;blog.flxzt.net&#x2F;posts&#x2F;pb-cheatsheet&#x2F;.&#x2F;assets&#x2F;client-tags-diagram.svg&quot;&gt;&lt;img src=&quot;https:&#x2F;&#x2F;blog.flxzt.net&#x2F;posts&#x2F;pb-cheatsheet&#x2F;.&#x2F;assets&#x2F;client-tags-diagram.svg&quot; alt=&quot;&quot; &#x2F;&gt;&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;Every window class is associated with different tags grouping different cheatsheets.
+For every tag that matches, the cheatsheet is displayed. The user is able to cycle through them
+with the &lt;code&gt;Prev&lt;&#x2F;code&gt;&#x2F;&lt;code&gt;Next&lt;&#x2F;code&gt; buttons.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;screenshot-feature&quot;&gt;Screenshot feature&lt;&#x2F;h3&gt;
+&lt;video width=&quot;100%&quot; controls=&quot;controls&quot;&gt;
+  &lt;source src=&quot;&#x2F;content&#x2F;posts&#x2F;pb_cheatsheet&#x2F;assets&#x2F;client-screenshot.mp4&quot; type=&quot;video&#x2F;mp4&quot;&gt;
+&lt;&#x2F;video&gt;
+&lt;p&gt;The host uses the &lt;a href=&quot;https:&#x2F;&#x2F;flatpak.github.io&#x2F;xdg-desktop-portal&#x2F;docs&#x2F;doc-org.freedesktop.portal.Screenshot.html&quot;&gt;XDG Desktop Sceenshot Portal&lt;&#x2F;a&gt;
+to open the screenshot tool and fetch the save path.
+It then reads the image data from the path, prepares and sends it to the client.
+The client then automatically switches to the &lt;code&gt;Screenshot&lt;&#x2F;code&gt; UI mode and displays that image.
+For users of dark mode UI&#x27;s, there is the possibility to invert the screenshot colors with a flag.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;rpc&quot;&gt;RPC&lt;&#x2F;h2&gt;
+&lt;p&gt;For communication and remote procedure calls between host and client &lt;a href=&quot;https:&#x2F;&#x2F;grpc.io&#x2F;&quot;&gt;GRPC&lt;&#x2F;a&gt; is used.
+The protocol is specified in a protobuf &lt;code&gt;.proto&lt;&#x2F;code&gt; file. A snippet:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;proto&quot; style=&quot;background-color:#0f1419;color:#bfbab0;&quot; class=&quot;language-proto &quot;&gt;&lt;code class=&quot;language-proto&quot; data-lang=&quot;proto&quot;&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;syntax &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;quot;proto3&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;package &lt;&#x2F;span&gt;&lt;span style=&quot;color:#59c2ff;&quot;&gt;pb_cheatsheet&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;;
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;service &lt;&#x2F;span&gt;&lt;span style=&quot;color:#59c2ff;&quot;&gt;PbCheatsheet &lt;&#x2F;span&gt;&lt;span&gt;{
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;rpc &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;FocusedWindow&lt;&#x2F;span&gt;&lt;span&gt;(FocusedWindowInfo) &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;returns &lt;&#x2F;span&gt;&lt;span&gt;(Empty) {}
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;rpc &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;GetScreenInfo&lt;&#x2F;span&gt;&lt;span&gt;(Empty) &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;returns &lt;&#x2F;span&gt;&lt;span&gt;(ScreenInfo) {}
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;rpc &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;GetCheatsheetsInfo&lt;&#x2F;span&gt;&lt;span&gt;(Empty) &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;returns &lt;&#x2F;span&gt;&lt;span&gt;(CheatsheetsInfo) {}
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;rpc &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;UploadCheatsheet&lt;&#x2F;span&gt;&lt;span&gt;(UploadCheatsheetRequest) &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;returns &lt;&#x2F;span&gt;&lt;span&gt;(Empty) {}
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;&#x2F;&#x2F; ...
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;&#x2F;&#x2F; ...
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;The &lt;a href=&quot;https:&#x2F;&#x2F;crates.io&#x2F;crates&#x2F;tonic&quot;&gt;tonic&lt;&#x2F;a&gt; crate generates Rust code for client and server out of it.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;cheatsheets&quot;&gt;Cheatsheets&lt;&#x2F;h2&gt;
+&lt;p&gt;To create cheatsheets easily there is a typst template
+that is optimized for &#x27;keyboard-key&#x27; -&amp;gt; &#x27;functionality&#x27; pair lists,
+uses an E-Paper suitable font and scales it&#x27;s content for the lower resolution
+while reducing margins to maximize available space.&lt;&#x2F;p&gt;
+&lt;p&gt;A snippet how this template is used for a git cheatsheet:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;typst&quot; style=&quot;background-color:#0f1419;color:#bfbab0;&quot; class=&quot;language-typst &quot;&gt;&lt;code class=&quot;language-typst&quot; data-lang=&quot;typst&quot;&gt;&lt;span&gt;#import &amp;quot;.&#x2F;cheat-template.typ&amp;quot;: cheat
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;#show: cheat.with(
+&lt;&#x2F;span&gt;&lt;span&gt;  title: [Git Cheatsheet],
+&lt;&#x2F;span&gt;&lt;span&gt;  icon: image(&amp;quot;icons&#x2F;git.svg&amp;quot;),
+&lt;&#x2F;span&gt;&lt;span&gt;)
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;#table(
+&lt;&#x2F;span&gt;&lt;span&gt;  table.header[Adding changes],
+&lt;&#x2F;span&gt;&lt;span&gt;  [`git add -u &amp;lt;path&amp;gt;`], [Add all tracked files to the *staging area*.],
+&lt;&#x2F;span&gt;&lt;span&gt;  [`git add -p &amp;lt;path&amp;gt;`], [Interactively pick which files to *stage*],
+&lt;&#x2F;span&gt;&lt;span&gt;)
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;&#x2F;&#x2F; ..
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;The rendered image looks like this:&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;a href=&quot;https:&#x2F;&#x2F;blog.flxzt.net&#x2F;posts&#x2F;pb-cheatsheet&#x2F;.&#x2F;assets&#x2F;cheat-git.png&quot;&gt;&lt;img src=&quot;https:&#x2F;&#x2F;blog.flxzt.net&#x2F;posts&#x2F;pb-cheatsheet&#x2F;.&#x2F;assets&#x2F;cheat-git.png&quot; alt=&quot;&quot; &#x2F;&gt;&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;conclusion&quot;&gt;Conclusion&lt;&#x2F;h1&gt;
+&lt;p&gt;It was a lot of work, but I gained a lot of knowledge about creating a development environment and
+the additional hurdles when developing for remote embedded linux systems.
+Generating bindings that do dynamic linking and using &#x27;zigbuild&#x27; stand out as very useful tools
+to avoid most of the pain of that would come with a &#x27;regular&#x27; cross-build setup.&lt;&#x2F;p&gt;
+&lt;p&gt;I also really enjoyed using GRPC as the remote procedure call mechanism between host and client.
+It seems very efficient, well thought out with regards to forward and backwards compatibility, stable
+and on top of it, was also quite easy and enjoyable to work with.
+So it will be one of my first choices in future projects that need to do RPC.&lt;&#x2F;p&gt;
+&lt;p&gt;I think this turned out pretty well, I achieved basically all of the goals for features
+that I had planned before I started.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
     <entry xml:lang="en">
         <title>Motion &amp; Gesture Recognition for low-res TOF-Sensors</title>
         <published>2022-12-18T00:00:00+00:00</published>
