@@ -31,9 +31,9 @@ The idea was to replace having to print cheatsheets and info cards
 for often used applications and tools like VSCode, Vim, Bash and so on.&lt;&#x2F;p&gt;
 &lt;p&gt;Pocketbook E-Reader devices are cool, because their firmware is Linux based and are,
 in comparison to other devices quite open.
-They allow creating custom applications with standard UNIX interfaces
-and additionally Pocketbook&#x27;s own SDK for drawing directly on the display, retrieving input
-and interacting with their services and utilities.&lt;&#x2F;p&gt;
+They allow creating custom applications in a standard linux environment
+and additionally Pocketbook&#x27;s &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;pocketbook&#x2F;SDK_6.3.0&quot;&gt;own SDK&lt;&#x2F;a&gt; for drawing directly on the display,
+retrieving input and interacting with their services and utilities.&lt;&#x2F;p&gt;
 &lt;p&gt;Unfortunately the publicly available SDK seems to not be regularly updated, but it still works on recent firmware.
 The actual used pocketbook E-Reader is the
 &lt;a href=&quot;https:&#x2F;&#x2F;www.pocketbook-int.com&#x2F;ge&#x2F;products&#x2F;pocketbook-touch-lux-3&quot;&gt;Touch Lux 3&lt;&#x2F;a&gt; (PB626)
@@ -45,7 +45,8 @@ The &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;pocketbook&#x2F;SDK_6.3.0
 Fortunately I am not treading on entirely new territory here.
 &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;simmsb&quot;&gt;Ben Simms&lt;&#x2F;a&gt; already created &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;simmsb&#x2F;inkview-rs&quot;&gt;inkview-rs&lt;&#x2F;a&gt;,
 a bindings crate that does bindings code generation through &lt;a href=&quot;https:&#x2F;&#x2F;crates.io&#x2F;crates&#x2F;bindgen&quot;&gt;bindgen&lt;&#x2F;a&gt;
-and can be used in combination with &lt;code&gt;cargo-zigbuild&lt;&#x2F;code&gt; to dynamically link the SDK with the built application.&lt;&#x2F;p&gt;
+and can be used in combination with &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;rust-cross&#x2F;cargo-zigbuild&quot;&gt;cargo-zigbuild&lt;&#x2F;a&gt; to dynamically link
+the SDK with the built application.&lt;&#x2F;p&gt;
 &lt;p&gt;The bindings code is generated with bindgen&#x27;s &lt;code&gt;--dynamic-loading&lt;&#x2F;code&gt; flag,
 so the actual symbols are linked at runtime through the dynamic linker &lt;code&gt;ld&lt;&#x2F;code&gt;.
 No need to have a complicated build environment with a custom cross-compilation C toolchain for the SDK,
@@ -55,7 +56,7 @@ Simply adding the &lt;code&gt;armv7-unknown-linux-gnueabi&lt;&#x2F;code&gt; targ
 &lt;code&gt;cargo zigbuild --target armv7-unknown-linux-gnueabi.2.23&lt;&#x2F;code&gt; cross-compiles to &lt;code&gt;armv7&lt;&#x2F;code&gt;
 with a specific glibc version that matches the one present on the Pocketbook device.&lt;&#x2F;p&gt;
 &lt;h2 id=&quot;rooting-ssh&quot;&gt;Rooting &amp;amp; SSH&lt;&#x2F;h2&gt;
-&lt;p&gt;By default it is not possible to run programs with root permissions on the pocketbook device.
+&lt;p&gt;By default it is not possible to run programs with root permissions on the device.
 However, because the firmware uses an old kernel version that is vulnerable to the &amp;quot;Mad-COW&amp;quot; exploit
 it is possible to &amp;quot;jailbreak&amp;quot; and install a root shell.
 The &lt;code&gt;pbjb&lt;&#x2F;code&gt; application has a guide in the &amp;quot;low-level-internals&amp;quot; section in the
@@ -65,7 +66,8 @@ After that programs with root permissions can be launched through &lt;code&gt;&#
 &lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#0f1419;color:#bfbab0;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;#!&#x2F;bin&#x2F;sh
 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;&#x2F;mnt&#x2F;secure&#x2F;su&lt;&#x2F;span&gt;&lt;span&gt; &#x2F;sbin&#x2F;dropbear&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt; -p&lt;&#x2F;span&gt;&lt;span&gt; 2468&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt; -G &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;quot;&amp;quot;
 &lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
-&lt;p&gt;The installed dropbear version does not accept all key algorithms though, I personally had trouble connecting at first.
+&lt;p&gt;The installed dropbear version does not accept all key algorithms though,
+I personally had trouble connecting at first.
 After some research, I came up with this SSH config that should work in most cases:&lt;&#x2F;p&gt;
 &lt;pre style=&quot;background-color:#0f1419;color:#bfbab0;&quot;&gt;&lt;code&gt;&lt;span&gt;Host pocketbook
 &lt;&#x2F;span&gt;&lt;span&gt;  HostName &amp;lt;device-ip&amp;gt;
@@ -79,14 +81,16 @@ After some research, I came up with this SSH config that should work in most cas
 &lt;p&gt;The SSH server should not be launched when the device is connected to non-trusted networks though
 because anyone could connect to it as root without any authentication.&lt;&#x2F;p&gt;
 &lt;h2 id=&quot;app-transfer&quot;&gt;App transfer&lt;&#x2F;h2&gt;
-&lt;p&gt;Applications with the file suffix &lt;code&gt;.app&lt;&#x2F;code&gt; placed into the &lt;code&gt;&#x2F;mnt&#x2F;ext1&#x2F;applications&lt;&#x2F;code&gt; directory (that appears as only
-&lt;code&gt;applications&lt;&#x2F;code&gt; when the device is connected through USB) are automatically shown in the applications launcher.
-They can be binaries, but also shell scripts. This is very useful to create some tools to make the development easier.&lt;&#x2F;p&gt;
+&lt;p&gt;Applications with the file suffix &lt;code&gt;.app&lt;&#x2F;code&gt; placed into the &lt;code&gt;&#x2F;mnt&#x2F;ext1&#x2F;applications&lt;&#x2F;code&gt; directory
+(that appears as only &lt;code&gt;applications&lt;&#x2F;code&gt; when the device is connected through USB)
+are automatically shown in the applications launcher.
+They can be binaries but also shell scripts.
+This is very useful to create some tools to make the development easier.&lt;&#x2F;p&gt;
 &lt;p&gt;To iterate fast I wanted to be able to transfer the built application to the device
 without any physical tasks like plugging a USB-cable in and out.&lt;&#x2F;p&gt;
 &lt;p&gt;To do that I utilized &lt;code&gt;netcat&lt;&#x2F;code&gt;, a tool for creating ad-hoc network sockets and transmit arbitrary data over them.
-The tool is already present on the device, so I only needed to create scripts for the developer machine &amp;amp; device
-that send and receive applications.&lt;&#x2F;p&gt;
+The tool is already present on the device,
+so I only needed to create scripts for the developer machine &amp;amp; device that send and receive applications.&lt;&#x2F;p&gt;
 &lt;div style=&quot;display: grid; grid-template-columns: 50% 50%; column-gap: 12px;&quot;&gt;
 &lt;div style=&quot;grid-column: 1&quot;&gt;
 Sender:
@@ -133,9 +137,9 @@ A &lt;code&gt;launch.json&lt;&#x2F;code&gt; configuration entry ended up looking
 Of course it&#x27;s also possible to use the gdb CLI directly.&lt;&#x2F;p&gt;
 &lt;h1 id=&quot;inkview-rs-improvements&quot;&gt;inkview-rs Improvements&lt;&#x2F;h1&gt;
 &lt;p&gt;The &lt;code&gt;inkview-rs&lt;&#x2F;code&gt; bindings crate needed additional features and fixes to satisfy my needs.
-For one, it needed to be extended to the SDK version &lt;code&gt;v5.19&lt;&#x2F;code&gt; that is supported on my device.
+For one, it needed to be extended to the SDK version &lt;code&gt;v5.19&lt;&#x2F;code&gt; that is supported on the Touch Lux 3.
 Previously, only bindings for &lt;code&gt;v6.5&lt;&#x2F;code&gt; were generated.
-These API versions can now be switched through cargo features at compile time.&lt;&#x2F;p&gt;
+These API versions can now be switched through cargo features &lt;code&gt;sdk-5-19&lt;&#x2F;code&gt; and &lt;code&gt;sdk-6-5&lt;&#x2F;code&gt; at compile time.&lt;&#x2F;p&gt;
 &lt;p&gt;I added additional safe rust wrappers for common tasks like a fast screen update and a wrapper for the dialog API.
 The library also previously had issues with an vertical draw offset which could be fixed
 by an setting a specific application flag through the pocketbook SDK.&lt;&#x2F;p&gt;
@@ -143,25 +147,25 @@ by an setting a specific application flag through the pocketbook SDK.&lt;&#x2F;p
 &lt;a href=&quot;https:&#x2F;&#x2F;docs.rs&#x2F;embedded-graphics-core&#x2F;latest&#x2F;embedded_graphics_core&#x2F;draw_target&#x2F;trait.DrawTarget.html&quot;&gt;embedded_graphics::DrawTarget&lt;&#x2F;a&gt;
 trait for the display.
 Doing that enables drawing with convenient API for graphics primitives and even things like text and bitmap images.&lt;&#x2F;p&gt;
-&lt;h1 id=&quot;pb-cheatsheet-applications&quot;&gt;pb-cheatsheet Applications&lt;&#x2F;h1&gt;
+&lt;h1 id=&quot;pb-cheatsheet-application&quot;&gt;pb-cheatsheet Application&lt;&#x2F;h1&gt;
 &lt;h2 id=&quot;overview&quot;&gt;Overview&lt;&#x2F;h2&gt;
 &lt;p&gt;Establishing a solid development environment and improvements to the inkview-rs library took a few weeks
 while working on-and-off on it.
-But after that I could focus on the &lt;code&gt;pb-cheatsheet&lt;&#x2F;code&gt; application itself.
+But after that I could focus on the application itself.
 The code is entirely open-source under &#x27;GPLv3&#x27; and can be found &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;flxzt&#x2F;pb-cheatsheet&quot;&gt;here&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
-&lt;p&gt;The host is a CLI tool that is able to communicate with the GRPC server of the client.
+&lt;p&gt;The host side is a CLI tool that is able to communicate with the GRPC server of the client.
 It should have the following features:&lt;&#x2F;p&gt;
 &lt;ul&gt;
 &lt;li&gt;ability to upload cheatsheets (images) to the client&lt;&#x2F;li&gt;
 &lt;li&gt;register&#x2F;delete associated tags&lt;&#x2F;li&gt;
 &lt;li&gt;retrieve device state&lt;&#x2F;li&gt;
 &lt;li&gt;ability to take screenshots and automatically upload them to the client&lt;&#x2F;li&gt;
-&lt;li&gt;continuously report the current focused window to the client&lt;&#x2F;li&gt;
+&lt;li&gt;continuously report the current focused window&lt;&#x2F;li&gt;
 &lt;&#x2F;ul&gt;
 &lt;p&gt;The client is a pocketbook specific application that holds and manages state and draws to the screen.
 For communication with the host it starts a GRPC server.
-It should possible to display some stats like the reported focused window by pressing the &lt;code&gt;Menu&lt;&#x2F;code&gt; button.
-It should also have three distinct modes as UI:&lt;&#x2F;p&gt;
+It should be possible to display some stats like the reported focused window by pressing the &lt;code&gt;Menu&lt;&#x2F;code&gt; button.
+There should also be three distinct modes as UI:&lt;&#x2F;p&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;Manual&lt;&#x2F;code&gt; : the user can manually cycle through the uploaded cheatsheets&lt;&#x2F;li&gt;
 &lt;li&gt;&lt;code&gt;Automatic WM-Class&lt;&#x2F;code&gt; : display cheatsheets for which tags are registered that match with the tags
@@ -179,7 +183,7 @@ registered to the reported focused window class.&lt;&#x2F;li&gt;
 &lt;&#x2F;span&gt;&lt;span&gt;                               Intended to be run as a service
 &lt;&#x2F;span&gt;&lt;span&gt;  get-screen-info         Get device screen info
 &lt;&#x2F;span&gt;&lt;span&gt;  get-cheatsheets-info    Get cheatsheets info
-&lt;&#x2F;span&gt;&lt;span&gt;  upload-cheatsheet       Upload a new chaetsheet that gets displayed when the added tags match the tags
+&lt;&#x2F;span&gt;&lt;span&gt;  upload-cheatsheet       Upload a new cheatsheet that gets displayed when the added tags match the tags
 &lt;&#x2F;span&gt;&lt;span&gt;                               that are added to the wm class of the reported window.
 &lt;&#x2F;span&gt;&lt;span&gt;                               The image size is adjusted depending on the reported screen info of the client
 &lt;&#x2F;span&gt;&lt;span&gt;  remove-cheatsheet       Remove a cheatsheet
@@ -245,9 +249,9 @@ Because the pocketbook SDK is not designed to be used in an async context, both 
 async and blocking, have to be combined carefully.&lt;&#x2F;p&gt;
 &lt;p&gt;The client also holds some state about the cheatsheets, their tags and the UI.&lt;&#x2F;p&gt;
 &lt;h3 id=&quot;persistence&quot;&gt;Persistence&lt;&#x2F;h3&gt;
-&lt;p&gt;The cheatsheets and the metadata containing the tags are saved to disk whenever changes are made
+&lt;p&gt;The cheatsheets and the metadata containing the tags are saved as files whenever changes are made
 and when the app is closed.
-The populatd save directory looks like this:&lt;&#x2F;p&gt;
+The populated save directory looks like this:&lt;&#x2F;p&gt;
 &lt;pre data-lang=&quot;bash&quot; style=&quot;background-color:#0f1419;color:#bfbab0;&quot; class=&quot;language-bash &quot;&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;save_dir&#x2F;
 &lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;wm_class_tags.json &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;# JSON file containing the tags that are associated with windows
 &lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;cheatsheet_app_1.cs &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;# Raw cheatsheet image data about &amp;lt;app1&amp;gt;
@@ -263,13 +267,13 @@ The images themselves are pre-converted to 8-bit grayscale and scaled the client
 &lt;p&gt;The tags system works like this:&lt;&#x2F;p&gt;
 &lt;p&gt;&lt;a href=&quot;https:&#x2F;&#x2F;blog.flxzt.net&#x2F;posts&#x2F;pb-cheatsheet&#x2F;.&#x2F;assets&#x2F;client-tags-diagram.svg&quot;&gt;&lt;img src=&quot;https:&#x2F;&#x2F;blog.flxzt.net&#x2F;posts&#x2F;pb-cheatsheet&#x2F;.&#x2F;assets&#x2F;client-tags-diagram.svg&quot; alt=&quot;&quot; &#x2F;&gt;&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
 &lt;p&gt;Every window class is associated with different tags grouping different cheatsheets.
-For every tag that matches, the cheatsheet is displayed. The user is able to cycle through them
+For every tag that matches, the corresponding cheatsheet is displayed. The user is able to cycle through them
 with the &lt;code&gt;Prev&lt;&#x2F;code&gt;&#x2F;&lt;code&gt;Next&lt;&#x2F;code&gt; buttons.&lt;&#x2F;p&gt;
 &lt;h3 id=&quot;screenshot-feature&quot;&gt;Screenshot feature&lt;&#x2F;h3&gt;
 &lt;video width=&quot;100%&quot; controls=&quot;controls&quot;&gt;
-  &lt;source src=&quot;&#x2F;content&#x2F;posts&#x2F;pb_cheatsheet&#x2F;assets&#x2F;client-screenshot.mp4&quot; type=&quot;video&#x2F;mp4&quot;&gt;
+  &lt;source src=&quot;&#x2F;posts&#x2F;pb-cheatsheet&#x2F;assets&#x2F;client-screenshot.mp4&quot; type=&quot;video&#x2F;mp4&quot;&gt;
 &lt;&#x2F;video&gt;
-&lt;p&gt;The host uses the &lt;a href=&quot;https:&#x2F;&#x2F;flatpak.github.io&#x2F;xdg-desktop-portal&#x2F;docs&#x2F;doc-org.freedesktop.portal.Screenshot.html&quot;&gt;XDG Desktop Sceenshot Portal&lt;&#x2F;a&gt;
+&lt;p&gt;The host uses the &lt;a href=&quot;https:&#x2F;&#x2F;flatpak.github.io&#x2F;xdg-desktop-portal&#x2F;docs&#x2F;doc-org.freedesktop.portal.Screenshot.html&quot;&gt;XDG Desktop Screenshot Portal&lt;&#x2F;a&gt;
 to open the screenshot tool and fetch the save path.
 It then reads the image data from the path, prepares and sends it to the client.
 The client then automatically switches to the &lt;code&gt;Screenshot&lt;&#x2F;code&gt; UI mode and displays that image.
