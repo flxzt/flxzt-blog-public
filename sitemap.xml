@@ -14,12 +14,8 @@
         <lastmod>2022-12-18</lastmod>
     </url>
     <url>
-        <loc>https://blog.flxzt.net/posts/hello-world/</loc>
+        <loc>https://blog.flxzt.net/posts/hello-from-the-future/</loc>
         <lastmod>2022-01-02</lastmod>
-    </url>
-    <url>
-        <loc>https://blog.flxzt.net/posts/markdown-syntax/</loc>
-        <lastmod>2022-01-01</lastmod>
     </url>
     <url>
         <loc>https://blog.flxzt.net/posts/page/1/</loc>
@@ -103,9 +99,6 @@
         <loc>https://blog.flxzt.net/tags/pocketbook/</loc>
     </url>
     <url>
-        <loc>https://blog.flxzt.net/tags/reference/</loc>
-    </url>
-    <url>
         <loc>https://blog.flxzt.net/tags/rust/</loc>
     </url>
     <url>
@@ -121,9 +114,6 @@
         <loc>https://blog.flxzt.net/tags/systemd/</loc>
     </url>
     <url>
-        <loc>https://blog.flxzt.net/tags/test/</loc>
-    </url>
-    <url>
         <loc>https://blog.flxzt.net/tags/theme/</loc>
     </url>
     <url>
@@ -131,5 +121,8 @@
     </url>
     <url>
         <loc>https://blog.flxzt.net/tags/web/</loc>
+    </url>
+    <url>
+        <loc>https://blog.flxzt.net/tags/welcome/</loc>
     </url>
 </urlset>
