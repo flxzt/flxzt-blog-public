@@ -1,0 +1,158 @@
+<!doctype html><html lang=en><head><meta charset=UTF-8><meta content="IE=edge" http-equiv=X-UA-Compatible><meta content="width=device-width,initial-scale=1.0" name=viewport><title>
+        TinyUSB on STM32 MCU's with STM32CubeIDE
+    </title><link href=/images/favicon.png rel=icon type=image/png><link href=/js/temml/Temml-Local.css rel=stylesheet><script src=https://blog.flxzt.net/js/temml/temml.min.js></script><script src=https://blog.flxzt.net/js/temml/auto-render.min.js></script><script src=https://blog.flxzt.net/node_modules/elevator.js/elevator.min.js></script><link href=https://blog.flxzt.net/node_modules/@fontsource/roboto/latin.css rel=stylesheet><link href=https://blog.flxzt.net/node_modules/@fontsource/merriweather/latin.css rel=stylesheet><link href=https://blog.flxzt.net/node_modules/@fontsource/inconsolata/latin.css rel=stylesheet><script async data-goatcounter=https://flxzt.goatcounter.com/count src=https://blog.flxzt.net/js/count.js></script><noscript><img src="https://flxzt.goatcounter.com//count?p=/posts/tinyusb-w-stm32cubeide/&t=TinyUSB on STM32 MCU's with STM32CubeIDE"></noscript><link href=https://blog.flxzt.net/atom.xml rel=alternate title=blog.flxzt.net type=application/atom+xml><link href=https://blog.flxzt.net/theme/light.css rel=stylesheet><link media="(prefers-color-scheme: dark)" href=https://blog.flxzt.net/theme/dark.css rel=stylesheet><link href=https://blog.flxzt.net/main.css media=screen rel=stylesheet><script src=https://blog.flxzt.net/js/main.js></script><body><div class=content><header><div class=site-info><a class=site-title href=https://blog.flxzt.net/>blog.flxzt.net</a><div class=site-description>My personal blog</div></div><nav class=site-menu><a class=site-menu-entry href=/posts>/posts</a><a class=site-menu-entry href=/projects>/projects</a><a class=site-menu-entry href=/tags>/tags</a><a class=site-menu-entry href=/thoughts>/thoughts</a><a class=site-menu-entry href=/about>/about</a></nav><div class=socials><a class=social href=https://blog.flxzt.net/atom.xml> <img alt=rss src=/social_icons/rss.svg> </a><a class=social href=https://github.com/flxzt/> <img alt=github src=/social_icons/github.svg> </a><a class=social href=https://mastodon.social/@flxzt> <img alt=mastodon src=/social_icons/mastodon.svg> </a></div></header><div class=main-content><main><article><img alt=/posts/tinyusb_w_stm32cubeide/assets/banner.jpg class=banner-image src=https://blog.flxzt.net/processed_images/banner.0a5869b3f3db8364.jpg><div class=page-title>TinyUSB on STM32 MCU's with STM32CubeIDE</div><div class=padded-content><div class=meta><time>2022-08-28</time><span class=tags> <small> <a class=tag href=https://blog.flxzt.net/tags/software/>software</a> </small> <small> <a class=tag href=https://blog.flxzt.net/tags/embedded/>embedded</a> </small> <small> <a class=tag href=https://blog.flxzt.net/tags/c/>c</a> </small> <small> <a class=tag href=https://blog.flxzt.net/tags/stm32/>stm32</a> </small> <small> <a class=tag href=https://blog.flxzt.net/tags/usb/>usb</a> </small> </span></div><div class=toc><h1>Table of Contents</h1><ul><li><a href=https://blog.flxzt.net/posts/tinyusb-w-stm32cubeide/#stmcubemx-configuration>STMCubeMX configuration</a><li><a href=https://blog.flxzt.net/posts/tinyusb-w-stm32cubeide/#stm32cubeide-integration>STM32CubeIDE integration</a><li><a href=https://blog.flxzt.net/posts/tinyusb-w-stm32cubeide/#code-cdc-dual-ports-example>Code (CDC dual ports example)</a> <ul><li><a href=https://blog.flxzt.net/posts/tinyusb-w-stm32cubeide/#tusb-config-h>tusb_config.h</a><li><a href=https://blog.flxzt.net/posts/tinyusb-w-stm32cubeide/#usb-descriptor-c>usb_descriptor.c</a><li><a href=https://blog.flxzt.net/posts/tinyusb-w-stm32cubeide/#stm32fxxx-it-c>stm32fxxx_it.c</a><li><a href=https://blog.flxzt.net/posts/tinyusb-w-stm32cubeide/#main-c>main.c</a></ul><li><a href=https://blog.flxzt.net/posts/tinyusb-w-stm32cubeide/#testing>Testing</a></ul></div><section><p>When using the USB peripheral on STM32 MCU's, you can choose between the vendor-provided USB stack and a third-party one like <a href=https://github.com/hathach/tinyusb>TinyUSB</a>. The vendor-provided is inconvenient to use because even though it provides a selection of predefined classes, the code generation always overwrites any changes one might need to make to the stack to customize it or even to fix bugs in the implementation. TinyUSB has the advantage to be hardware-independent, is easy-to-use and highly customizable. Its disadvantage is that its integration into STM32CubeIDE and the HAL is not straight-forward. Hence this guide.<h1 id=stmcubemx-configuration>STMCubeMX configuration</h1><aside style=max-width:50%><div class=aside-inner><a href=./assets/cubeide_config_usb_connectivity.png><img alt src=./assets/cubeide_config_usb_connectivity.png></a></div></aside><p>TinyUSB uses the abstractions of the lower-level HAL for STM32 MCU's. This is configured in CubeMX. First, the <code>USB_OTG_FS</code> peripheral in the <code>Connectivity</code> section needs to be enabled. Set it to <code>Device Only</code> and most importantly check the global USB interrupt in <code>NVIC Settings</code>. This generates the <code>OTG_FS_IRQHandler()</code> interrupt callback in the <code>stm32f&LTx>xx_it.c</code> file, it is needed later.<p>Make sure that the <code>USB Device</code> in <code>Middleware</code> is <strong>not</strong> enabled.<p>Then the clock solver needs to be run the in <code>Clock configuration</code>. After that work is done in the CubeMX tool and the code can be generated.<div class=clear></div><h1 id=stm32cubeide-integration>STM32CubeIDE integration</h1><p>First, the TinyUSB repository needs to be cloned into the project and enabled for linking and compilation.<p>In the project root directory, execute:<pre class=language-bash data-lang=bash style=color:#bfbab0;background-color:#0f1419><code class=language-bash data-lang=bash><span style=color:#ffb454>git</span><span> clone https://github.com/hathach/tinyusb
+</span><span style=color:#5c6773;font-style:italic># Or when the repository itself is managed with git
+</span><span style=color:#ffb454>git</span><span> submodule add https://github.com/hathach/tinyusb
+</span></code></pre><p>TinyUSB itself uses some library submodules in <code>lib</code>, which need to be initialized.<pre class=language-bash data-lang=bash style=color:#bfbab0;background-color:#0f1419><code class=language-bash data-lang=bash><span style=color:#f07178>cd</span><span> tinyusb
+</span><span style=color:#ffb454>git</span><span> submodule update</span><span style=color:#f29718> --init --recursive</span><span> lib
+</span></code></pre><p>It is recommended to use a released version, so the repository needs to be checked out to a release tag (<code>0.14.0</code> at the time of writing):<pre class=language-bash data-lang=bash style=color:#bfbab0;background-color:#0f1419><code class=language-bash data-lang=bash><span style=color:#ffb454>git</span><span> fetch</span><span style=color:#f29718> --all --tags
+</span><span style=color:#ffb454>git</span><span> checkout 0.14.0
+</span></code></pre><aside style=max-width:50%><div class=aside-inner><a href=./assets/cubeide_properties_tinyusb_include.png><img alt src=./assets/cubeide_properties_tinyusb_include.png></a></div></aside><p>Then the linker and compiler need to be configured. First, open the projects properties window under <code>Project->Properties</code> and navigate to <code>C/C++ Build->Settings</code>. In the <code>MCU GCC Compiler->Include Paths</code> view you can add the path to the TinyUSB source directory to include its header files.<br> Make sure it is added for all configurations.<p>Then navigate to <code>C/C++ General->Paths and Symbols</code> and in <code>Source Location</code> add the TinyUSB source directory as well for all configurations.<div class=clear></div><p>At the time of writing with <code>v0.14.0</code> there are two drivers for STM32 devices. Leaving them both enabled would result in <code>Symbol already defined</code> compilation errors. To prevent this, one of them needs to be disabled. This can be done by excluding its file with a filter. Select the added path and click on <code>Edit Filters</code> on the right side. Then add the <code>portable/st/synopsys/dcd_synopsys.c</code> to the filter.<br> This disables the older driver, and the newer driver in <code>portable/synopsys/dwc2/dcd_dwc2.c</code> gets used. By <a href=https://github.com/hathach/tinyusb/discussions/1436#discussioncomment-2592135>developer comment</a> the older one will be removed at some point so this might not be necessary anymore in the future.<p><a href=https://blog.flxzt.net/posts/tinyusb-w-stm32cubeide/./assets/cubeide_properties_tinyusb_source_location_w_filter.png><img alt src=https://blog.flxzt.net/posts/tinyusb-w-stm32cubeide/./assets/cubeide_properties_tinyusb_source_location_w_filter.png></a><h1 id=code-cdc-dual-ports-example>Code (CDC dual ports example)</h1><p>To be able to use TinyUSB, it needs to be integrated in the existing code. For demonstration purposes the <a href=https://github.com/hathach/tinyusb/tree/master/examples/device/cdc_dual_ports>CDC dual ports example</a> will get used.<h2 id=tusb-config-h>tusb_config.h</h2><p>TinyUSB expects the <code>tusb_config.h</code> configuration file to be present. In there the library and the peripheral is configured. Create it in <code>Core/Inc</code>.<p>The <code>CFG_TUSB_MCU</code> and <code>CFG_TUSB_OS</code> definitions are mandatory. Valid values for both definitions can be looked up in <code>tusb_option.h</code>.<pre class=language-c data-lang=c style=color:#bfbab0;background-color:#0f1419><code class=language-c data-lang=c><span style=color:#5c6773;font-style:italic>// tusb_config.h
+</span><span>
+</span><span style=color:#5c6773;font-style:italic>// ...
+</span><span>
+</span><span style=color:#5c6773;font-style:italic>// Debugging
+</span><span style=color:#f73>#define </span><span style=color:#59c2ff>CFG_TUSB_DEBUG        </span><span style=color:#f29718>3
+</span><span>
+</span><span style=color:#5c6773;font-style:italic>// Enable device stack
+</span><span style=color:#f73>#define </span><span style=color:#59c2ff>CFG_TUD_ENABLED       </span><span style=color:#f29718>1
+</span><span>
+</span><span style=color:#5c6773;font-style:italic>// Endpoint size for full-speed
+</span><span style=color:#f73>#define </span><span style=color:#59c2ff>CFG_TUD_ENDPOINT0_SIZE    </span><span style=color:#f29718>64
+</span><span>
+</span><span style=color:#5c6773;font-style:italic>// Enables 2 interfaces of class CDC
+</span><span style=color:#f73>#define </span><span style=color:#59c2ff>CFG_TUD_CDC               </span><span style=color:#f29718>2
+</span><span>
+</span><span style=color:#5c6773;font-style:italic>// ...
+</span></code></pre><h2 id=usb-descriptor-c>usb_descriptor.c</h2><p>Add <code>usb_descriptors.c</code> in <code>Core/Src/</code>. This file is for configuring the USB descriptors.<pre class=language-c data-lang=c style=color:#bfbab0;background-color:#0f1419><code class=language-c data-lang=c><span style=color:#5c6773;font-style:italic>// usb_descriptor.c
+</span><span>
+</span><span style=color:#f73>#include </span><span style=color:#c2d94c>"tusb.h"
+</span><span>
+</span><span style=color:#5c6773;font-style:italic>// ...
+</span><span>
+</span><span style=color:#f73>#define </span><span style=color:#ffb454>_PID_MAP</span><span>(</span><span style=color:#f29718>itf</span><span style=color:#bfbab0cc>, </span><span style=color:#f29718>n</span><span>)  ( (CFG_TUD_##itf) </span><span style=color:#f29668><< </span><span>(n) )
+</span><span style=color:#f73>#define </span><span style=color:#59c2ff>USB_PID           </span><span>(</span><span style=color:#f29718>0x4000 </span><span style=color:#f29668>| </span><span style=color:#ffb454>_PID_MAP</span><span>(CDC</span><span style=color:#bfbab0cc>, </span><span style=color:#f29718>0</span><span>) </span><span style=color:#f29668>| </span><span style=color:#ffb454>_PID_MAP</span><span>(MSC</span><span style=color:#bfbab0cc>, </span><span style=color:#f29718>1</span><span>) </span><span style=color:#f29668>| </span><span style=color:#ffb454>_PID_MAP</span><span>(HID</span><span style=color:#bfbab0cc>, </span><span style=color:#f29718>2</span><span>) </span><span style=color:#f29668>|</span><span> \
+</span><span>                           </span><span style=color:#ffb454>_PID_MAP</span><span>(MIDI</span><span style=color:#bfbab0cc>, </span><span style=color:#f29718>3</span><span>) </span><span style=color:#f29668>| </span><span style=color:#ffb454>_PID_MAP</span><span>(VENDOR</span><span style=color:#bfbab0cc>, </span><span style=color:#f29718>4</span><span>) )
+</span><span style=color:#f73>#define </span><span style=color:#59c2ff>USB_VID   </span><span style=color:#f29718>0xCafe
+</span><span style=color:#f73>#define </span><span style=color:#59c2ff>USB_BCD   </span><span style=color:#f29718>0x0200
+</span><span>
+</span><span style=color:#5c6773;font-style:italic>// ...
+</span><span>
+</span><span style=color:#39bae6;font-style:italic>uint8_t </span><span style=color:#f73>const</span><span> desc_fs_configuration[] </span><span style=color:#f29668>=
+</span><span>{
+</span><span>  </span><span style=color:#5c6773;font-style:italic>// Config number, interface count, string index, total length, attribute, power in mA
+</span><span>  </span><span style=color:#ffb454>TUD_CONFIG_DESCRIPTOR</span><span>(</span><span style=color:#f29718>1</span><span style=color:#bfbab0cc>,</span><span> ITF_NUM_TOTAL</span><span style=color:#bfbab0cc>, </span><span style=color:#f29718>0</span><span style=color:#bfbab0cc>,</span><span> CONFIG_TOTAL_LEN</span><span style=color:#bfbab0cc>, </span><span style=color:#f29718>0x00</span><span style=color:#bfbab0cc>, </span><span style=color:#f29718>100</span><span>)</span><span style=color:#bfbab0cc>,
+</span><span>
+</span><span>  </span><span style=color:#5c6773;font-style:italic>// 1st CDC: Interface number, string index, EP notification address and size, EP data address (out, in) and size.
+</span><span>  </span><span style=color:#ffb454>TUD_CDC_DESCRIPTOR</span><span>(ITF_NUM_CDC_0</span><span style=color:#bfbab0cc>, </span><span style=color:#f29718>4</span><span style=color:#bfbab0cc>,</span><span> EPNUM_CDC_0_NOTIF</span><span style=color:#bfbab0cc>, </span><span style=color:#f29718>8</span><span style=color:#bfbab0cc>,</span><span> EPNUM_CDC_0_OUT</span><span style=color:#bfbab0cc>,</span><span> EPNUM_CDC_0_IN</span><span style=color:#bfbab0cc>, </span><span style=color:#f29718>64</span><span>)</span><span style=color:#bfbab0cc>,
+</span><span>
+</span><span>  </span><span style=color:#5c6773;font-style:italic>// 2nd CDC: Interface number, string index, EP notification address and size, EP data address (out, in) and size.
+</span><span>  </span><span style=color:#ffb454>TUD_CDC_DESCRIPTOR</span><span>(ITF_NUM_CDC_1</span><span style=color:#bfbab0cc>, </span><span style=color:#f29718>4</span><span style=color:#bfbab0cc>,</span><span> EPNUM_CDC_1_NOTIF</span><span style=color:#bfbab0cc>, </span><span style=color:#f29718>8</span><span style=color:#bfbab0cc>,</span><span> EPNUM_CDC_1_OUT</span><span style=color:#bfbab0cc>,</span><span> EPNUM_CDC_1_IN</span><span style=color:#bfbab0cc>, </span><span style=color:#f29718>64</span><span>)</span><span style=color:#bfbab0cc>,
+</span><span>}</span><span style=color:#bfbab0cc>;
+</span><span>
+</span><span style=color:#5c6773;font-style:italic>// array of pointer to string descriptors
+</span><span style=color:#f73>char const</span><span style=color:#f29668>*</span><span> string_desc_arr [] </span><span style=color:#f29668>=
+</span><span>{
+</span><span>  (</span><span style=color:#f73>const char</span><span>[]) { </span><span style=color:#f29718>0x09</span><span style=color:#bfbab0cc>, </span><span style=color:#f29718>0x04 </span><span>}</span><span style=color:#bfbab0cc>, </span><span style=color:#5c6773;font-style:italic>// 0: is supported language is English (0x0409)
+</span><span>  </span><span style=color:#c2d94c>"TinyUSB"</span><span style=color:#bfbab0cc>,                     </span><span style=color:#5c6773;font-style:italic>// 1: Manufacturer
+</span><span>  </span><span style=color:#c2d94c>"Private Inc"</span><span style=color:#bfbab0cc>,                 </span><span style=color:#5c6773;font-style:italic>// 2: Product
+</span><span>  </span><span style=color:#c2d94c>"123456"</span><span style=color:#bfbab0cc>,                      </span><span style=color:#5c6773;font-style:italic>// 3: Serials, should use chip ID
+</span><span>  </span><span style=color:#c2d94c>"TinyUSB CDC"</span><span style=color:#bfbab0cc>,                 </span><span style=color:#5c6773;font-style:italic>// 4: CDC Interface
+</span><span>}</span><span style=color:#bfbab0cc>;
+</span><span>
+</span><span style=color:#5c6773;font-style:italic>// ...
+</span></code></pre><h2 id=stm32fxxx-it-c>stm32fxxx_it.c</h2><p>As mentioned in the beginning, the code inside the global interrupt handler needs to be modified. In there <code>tud_int_handler()</code> is called to hand the handling of the interrupt to TinyUSB. By returning early, the "normal" interrupt handler code is prevented to be run, because it could interfere with TinyUSB.<pre class=language-c data-lang=c style=color:#bfbab0;background-color:#0f1419><code class=language-c data-lang=c><span style=color:#5c6773;font-style:italic>// stm32fxxx_it.c
+</span><span>
+</span><span style=color:#5c6773;font-style:italic>//...
+</span><span>
+</span><span style=color:#f73>void </span><span style=color:#ffb454>OTG_FS_IRQHandler</span><span>(</span><span style=color:#f73>void</span><span>)
+</span><span>{
+</span><span>  </span><span style=color:#5c6773;font-style:italic>/* USER CODE BEGIN OTG_FS_IRQn 0 */
+</span><span>  </span><span style=color:#f73>return </span><span style=color:#ffb454>tud_int_handler</span><span>(BOARD_DEVICE_RHPORT_NUM)</span><span style=color:#bfbab0cc>;
+</span><span>
+</span><span>  </span><span style=color:#5c6773;font-style:italic>/* USER CODE END OTG_FS_IRQn 0 */
+</span><span>  </span><span style=color:#ffb454>HAL_PCD_IRQHandler</span><span>(</span><span style=color:#f29668>&</span><span>hpcd_USB_OTG_FS)</span><span style=color:#bfbab0cc>;
+</span><span>  </span><span style=color:#5c6773;font-style:italic>/* USER CODE BEGIN OTG_FS_IRQn 1 */
+</span><span>
+</span><span>  </span><span style=color:#5c6773;font-style:italic>/* USER CODE END OTG_FS_IRQn 1 */
+</span><span>}
+</span><span>
+</span><span style=color:#5c6773;font-style:italic>// ...
+</span></code></pre><h2 id=main-c>main.c</h2><p>Then finally in <code>main.c</code> the library is initialized with <code>tusb_init()</code> after the clock and peripheral initialization of the HAL. In the main loop <code>tud_task()</code> is repeatedly called to handle all pending events in TinyUSB's internal event queue.<p>For the CDC example there is also some code to echo the received input from either CDC interface to both in either lower- and uppercase.<pre class=language-c data-lang=c style=color:#bfbab0;background-color:#0f1419><code class=language-c data-lang=c><span style=color:#5c6773;font-style:italic>// main.c
+</span><span>
+</span><span style=color:#5c6773;font-style:italic>// ...
+</span><span style=color:#f73>#include </span><span style=color:#c2d94c>"ctype.h"
+</span><span style=color:#f73>#include </span><span style=color:#c2d94c>"tusb_config.h"
+</span><span style=color:#f73>#include </span><span style=color:#c2d94c>"tusb.h"
+</span><span style=color:#5c6773;font-style:italic>// ...
+</span><span>
+</span><span style=color:#f73>static void </span><span style=color:#ffb454>echo_serial_port</span><span>(</span><span style=color:#39bae6;font-style:italic>uint8_t </span><span style=color:#f29718>itf</span><span style=color:#bfbab0cc>, </span><span style=color:#39bae6;font-style:italic>uint8_t </span><span style=color:#f29718>buf</span><span>[]</span><span style=color:#bfbab0cc>, </span><span style=color:#39bae6;font-style:italic>uint32_t </span><span style=color:#f29718>count</span><span>)</span><span style=color:#bfbab0cc>;
+</span><span style=color:#f73>static void </span><span style=color:#ffb454>cdc_task</span><span>(</span><span style=color:#f73>void</span><span>)</span><span style=color:#bfbab0cc>;
+</span><span>
+</span><span style=color:#f73>int </span><span style=color:#ffb454>main</span><span>(</span><span style=color:#f73>void</span><span>) {
+</span><span>  </span><span style=color:#5c6773;font-style:italic>// ...
+</span><span>
+</span><span>	</span><span style=color:#ffb454>tusb_init</span><span>()</span><span style=color:#bfbab0cc>;
+</span><span>
+</span><span>	</span><span style=color:#f73>while </span><span>(</span><span style=color:#f29718>1</span><span>) {
+</span><span>		</span><span style=color:#ffb454>tud_task</span><span>()</span><span style=color:#bfbab0cc>; </span><span style=color:#5c6773;font-style:italic>// TinyUSB device task
+</span><span>		
+</span><span>		</span><span style=color:#ffb454>cdc_task</span><span>()</span><span style=color:#bfbab0cc>; </span><span style=color:#5c6773;font-style:italic>// CDC example
+</span><span>		</span><span style=color:#5c6773;font-style:italic>// ...
+</span><span>	}
+</span><span>}
+</span><span>
+</span><span style=color:#5c6773;font-style:italic>// ***
+</span><span>
+</span><span style=color:#5c6773;font-style:italic>// echo to either Serial0 or Serial1.
+</span><span style=color:#5c6773;font-style:italic>// with Serial0 as all lower case, Serial1 as all upper case.
+</span><span style=color:#f73>static void </span><span style=color:#ffb454>echo_serial_port</span><span>(</span><span style=color:#39bae6;font-style:italic>uint8_t </span><span style=color:#f29718>itf</span><span style=color:#bfbab0cc>, </span><span style=color:#39bae6;font-style:italic>uint8_t </span><span style=color:#f29718>buf</span><span>[]</span><span style=color:#bfbab0cc>, </span><span style=color:#39bae6;font-style:italic>uint32_t </span><span style=color:#f29718>count</span><span>) {
+</span><span>  </span><span style=color:#39bae6;font-style:italic>uint8_t </span><span style=color:#f73>const</span><span> case_diff </span><span style=color:#f29668>= </span><span style=color:#c2d94c>'a' </span><span style=color:#f29668>- </span><span style=color:#c2d94c>'A'</span><span style=color:#bfbab0cc>;
+</span><span>
+</span><span>  </span><span style=color:#f73>for </span><span>(</span><span style=color:#39bae6;font-style:italic>uint32_t</span><span> i </span><span style=color:#f29668>= </span><span style=color:#f29718>0</span><span style=color:#bfbab0cc>;</span><span> i </span><span style=color:#f29668><</span><span> count</span><span style=color:#bfbab0cc>;</span><span> i</span><span style=color:#f29668>++</span><span>) {
+</span><span>    </span><span style=color:#f73>if </span><span>(itf </span><span style=color:#f29668>== </span><span style=color:#f29718>0</span><span>) {
+</span><span>      </span><span style=color:#5c6773;font-style:italic>// echo back 1st port as lower case
+</span><span>      </span><span style=color:#f73>if </span><span>(</span><span style=color:#f07178>isupper</span><span>(buf[i]))
+</span><span>        buf[i] </span><span style=color:#f29668>+=</span><span> case_diff</span><span style=color:#bfbab0cc>;
+</span><span>    } </span><span style=color:#f73>else </span><span>{
+</span><span>      </span><span style=color:#5c6773;font-style:italic>// echo back 2nd port as upper case
+</span><span>      </span><span style=color:#f73>if </span><span>(</span><span style=color:#f07178>islower</span><span>(buf[i]))
+</span><span>        buf[i] </span><span style=color:#f29668>-=</span><span> case_diff</span><span style=color:#bfbab0cc>;
+</span><span>    }
+</span><span>
+</span><span>    </span><span style=color:#ffb454>tud_cdc_n_write_char</span><span>(itf</span><span style=color:#bfbab0cc>,</span><span> buf[i])</span><span style=color:#bfbab0cc>;
+</span><span>  }
+</span><span>  </span><span style=color:#ffb454>tud_cdc_n_write_flush</span><span>(itf)</span><span style=color:#bfbab0cc>;
+</span><span>}
+</span><span>
+</span><span style=color:#5c6773;font-style:italic>// USB CDC
+</span><span style=color:#f73>static void </span><span style=color:#ffb454>cdc_task</span><span>(</span><span style=color:#f73>void</span><span>) {
+</span><span>  </span><span style=color:#39bae6;font-style:italic>uint8_t</span><span> itf</span><span style=color:#bfbab0cc>;
+</span><span>
+</span><span>  </span><span style=color:#f73>for </span><span>(itf </span><span style=color:#f29668>= </span><span style=color:#f29718>0</span><span style=color:#bfbab0cc>;</span><span> itf </span><span style=color:#f29668><</span><span> CFG_TUD_CDC</span><span style=color:#bfbab0cc>;</span><span> itf</span><span style=color:#f29668>++</span><span>) {
+</span><span>    </span><span style=color:#5c6773;font-style:italic>// connected() check for DTR bit
+</span><span>    </span><span style=color:#5c6773;font-style:italic>// Most but not all terminal client set this when making connection
+</span><span>    </span><span style=color:#5c6773;font-style:italic>// if ( tud_cdc_n_connected(itf) )
+</span><span>    {
+</span><span>      </span><span style=color:#f73>if </span><span>(</span><span style=color:#ffb454>tud_cdc_n_available</span><span>(itf)) {
+</span><span>        </span><span style=color:#39bae6;font-style:italic>uint8_t</span><span> buf[</span><span style=color:#f29718>64</span><span>]</span><span style=color:#bfbab0cc>;
+</span><span>        </span><span style=color:#39bae6;font-style:italic>uint32_t</span><span> count </span><span style=color:#f29668>= </span><span style=color:#ffb454>tud_cdc_n_read</span><span>(itf</span><span style=color:#bfbab0cc>,</span><span> buf</span><span style=color:#bfbab0cc>, </span><span style=color:#f73>sizeof</span><span>(buf))</span><span style=color:#bfbab0cc>;
+</span><span>        </span><span style=color:#5c6773;font-style:italic>// echo back to both serial ports
+</span><span>        </span><span style=color:#ffb454>echo_serial_port</span><span>(</span><span style=color:#f29718>0</span><span style=color:#bfbab0cc>,</span><span> buf</span><span style=color:#bfbab0cc>,</span><span> count)</span><span style=color:#bfbab0cc>;
+</span><span>        </span><span style=color:#ffb454>echo_serial_port</span><span>(</span><span style=color:#f29718>1</span><span style=color:#bfbab0cc>,</span><span> buf</span><span style=color:#bfbab0cc>,</span><span> count)</span><span style=color:#bfbab0cc>;
+</span><span>      }
+</span><span>    }
+</span><span>	}
+</span><span>}
+</span><span>
+</span><span style=color:#5c6773;font-style:italic>// ...
+</span></code></pre><h1 id=testing>Testing</h1><p>Before running the code, it is advisable to enable debugging and logging at first by setting <code>CFG_TUSB_DEBUG</code> to a value greater than zero in the configuration file. By default TinyUSB is logging with <code>printf()</code>. To be able to inspect these entries over e.g. UART, <code>_write()</code> can be overwritten with something like:<pre class=language-c data-lang=c style=color:#bfbab0;background-color:#0f1419><code class=language-c data-lang=c><span style=color:#5c6773;font-style:italic>// main.c
+</span><span>
+</span><span style=color:#5c6773;font-style:italic>// ...
+</span><span>
+</span><span style=color:#f73>int </span><span style=color:#ffb454>_write</span><span>(</span><span style=color:#f73>int </span><span style=color:#f29718>file</span><span style=color:#bfbab0cc>, </span><span style=color:#f73>char </span><span style=color:#f29668>*</span><span style=color:#f29718>ptr</span><span style=color:#bfbab0cc>, </span><span style=color:#f73>int </span><span style=color:#f29718>len</span><span>) {
+</span><span>  </span><span style=color:#f73>return </span><span style=color:#ffb454>HAL_UART_Transmit</span><span>(</span><span style=color:#f29668>&</span><span>huart2</span><span style=color:#bfbab0cc>, </span><span>(</span><span style=color:#39bae6;font-style:italic>uint8_t</span><span style=color:#f29668>*</span><span>) ptr</span><span style=color:#bfbab0cc>,</span><span> len</span><span style=color:#bfbab0cc>,</span><span> HAL_MAX_DELAY)</span><span style=color:#bfbab0cc>;
+</span><span>}
+</span><span>
+</span><span style=color:#5c6773;font-style:italic>// ...
+</span></code></pre><aside style=max-width:70%><div class=aside-inner><a href=./assets/cdc_example_works.png><img alt src=./assets/cdc_example_works.png></a></div></aside><p>This is it! The code should now compile and run on the MCU. Once the USB peripheral is connected to the host, a USB device should appear with Vendor ID <code>0xCafe</code> and two CDC devices. They should appear as virtual-COM Ports in the "Device Manager" on Windows or by inspecting the output of <code>lsusb</code> on Linux.<p>To connect to both CDC's a serial terminal tool can be used, for example <code>tio</code>. On linux execute <code>tio /dev/ttyACM&LTx></code> for both devices.<br> Then, whenever something is typed into one of the terminals it should be echoed by both in lower- and uppercase.</section></div></article></main></div><footer><small> Felix Zwettler - <a href=http://creativecommons.org/licenses/by-sa/4.0/ rel=license><img alt="Creative Commons Lizenzvertrag" src=https://i.creativecommons.org/l/by-sa/4.0/80x15.png></a> - © 2025 </small></footer><button class=elevator-button>🛗</button></div></body><script src=https://blog.flxzt.net/js/temml_config.js></script>

@@ -1,0 +1,916 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
+    <title>blog.flxzt.net</title>
+    <subtitle>My personal blog</subtitle>
+    <link rel="self" type="application/atom+xml" href="https://blog.flxzt.net/atom.xml"/>
+    <link rel="alternate" type="text/html" href="https://blog.flxzt.net/"/>
+    <generator uri="https://www.getzola.org/">Zola</generator>
+    <updated>2024-06-01T00:00:00+00:00</updated>
+    <id>https://blog.flxzt.net/atom.xml</id>
+    <entry xml:lang="en">
+        <title>pb-cheatsheet</title>
+        <published>2024-06-01T00:00:00+00:00</published>
+        <updated>2024-06-01T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              Unknown
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://blog.flxzt.net/projects/pb-cheatsheet/"/>
+        <id>https://blog.flxzt.net/projects/pb-cheatsheet/</id>
+        
+        <content type="html" xml:base="https://blog.flxzt.net/projects/pb-cheatsheet/"></content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Dynamic Cheatsheets on Pocketbook E-Reader</title>
+        <published>2024-05-08T00:00:00+00:00</published>
+        <updated>2024-05-08T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              Unknown
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://blog.flxzt.net/posts/pb-cheatsheet/"/>
+        <id>https://blog.flxzt.net/posts/pb-cheatsheet/</id>
+        
+        <content type="html" xml:base="https://blog.flxzt.net/posts/pb-cheatsheet/">&lt;h1 id=&quot;motivation&quot;&gt;Motivation&lt;&#x2F;h1&gt;
+&lt;p&gt;My goal for this project was to repurpose my E-Reader device and write an application
+that dynamically displays cheatsheets based on the current focused window,
+acting as a special purpose second screen for mostly static content.
+The idea was to replace having to print cheatsheets and info cards
+for often used applications and tools like VSCode, Vim, Bash and so on.&lt;&#x2F;p&gt;
+&lt;p&gt;Pocketbook E-Reader devices are cool, because their firmware is Linux based and are,
+in comparison to other devices quite open.
+They allow creating custom applications in a standard linux environment
+and additionally Pocketbook&#x27;s &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;pocketbook&#x2F;SDK_6.3.0&quot;&gt;own SDK&lt;&#x2F;a&gt; for drawing directly on the display,
+retrieving input and interacting with their services and utilities.&lt;&#x2F;p&gt;
+&lt;p&gt;Unfortunately the publicly available SDK seems to not be regularly updated, but it still works on recent firmware.
+The actual used pocketbook E-Reader is the
+&lt;a href=&quot;https:&#x2F;&#x2F;www.pocketbook-int.com&#x2F;ge&#x2F;products&#x2F;pocketbook-touch-lux-3&quot;&gt;Touch Lux 3&lt;&#x2F;a&gt; (PB626)
+which is now already quite old but still works fine.&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;setup-build-environment&quot;&gt;Setup &amp;amp; Build environment&lt;&#x2F;h1&gt;
+&lt;h2 id=&quot;bindings&quot;&gt;Bindings&lt;&#x2F;h2&gt;
+&lt;p&gt;The language of choice to write software for me is Rust.
+The &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;pocketbook&#x2F;SDK_6.3.0&quot;&gt;SDK&lt;&#x2F;a&gt; is written in C, so there is the need for bindings.
+Fortunately I am not treading on entirely new territory here.
+&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;simmsb&quot;&gt;Ben Simms&lt;&#x2F;a&gt; already created &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;simmsb&#x2F;inkview-rs&quot;&gt;inkview-rs&lt;&#x2F;a&gt;,
+a bindings crate that does bindings code generation through &lt;a href=&quot;https:&#x2F;&#x2F;crates.io&#x2F;crates&#x2F;bindgen&quot;&gt;bindgen&lt;&#x2F;a&gt;
+and can be used in combination with &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;rust-cross&#x2F;cargo-zigbuild&quot;&gt;cargo-zigbuild&lt;&#x2F;a&gt; to dynamically link
+the SDK with the built application.&lt;&#x2F;p&gt;
+&lt;p&gt;The bindings code is generated with bindgen&#x27;s &lt;code&gt;--dynamic-loading&lt;&#x2F;code&gt; flag,
+so the actual symbols are linked at runtime through the dynamic linker &lt;code&gt;ld&lt;&#x2F;code&gt;.
+No need to have a complicated build environment with a custom cross-compilation C toolchain for the SDK,
+linking &lt;code&gt;.a&lt;&#x2F;code&gt; files, and so on!&lt;&#x2F;p&gt;
+&lt;p&gt;Because of that, remote development really is free of pain.
+Simply adding the &lt;code&gt;armv7-unknown-linux-gnueabi&lt;&#x2F;code&gt; target to cargo and then executing
+&lt;code&gt;cargo zigbuild --target armv7-unknown-linux-gnueabi.2.23&lt;&#x2F;code&gt; cross-compiles to &lt;code&gt;armv7&lt;&#x2F;code&gt;
+with a specific glibc version that matches the one present on the Pocketbook device.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;rooting-ssh&quot;&gt;Rooting &amp;amp; SSH&lt;&#x2F;h2&gt;
+&lt;p&gt;By default it is not possible to run programs with root permissions on the device.
+However, because the firmware uses an old kernel version that is vulnerable to the &quot;Mad-COW&quot; exploit
+it is possible to &quot;jailbreak&quot; and install a root shell.
+The &lt;code&gt;pbjb&lt;&#x2F;code&gt; application has a guide in the &quot;low-level-internals&quot; section in the
+&lt;a href=&quot;https:&#x2F;&#x2F;www.mobileread.com&#x2F;forums&#x2F;showthread.php?t=325185&quot;&gt;mobileread forum thread&lt;&#x2F;a&gt; to do that.
+After that programs with root permissions can be launched through &lt;code&gt;&#x2F;mnt&#x2F;secure&#x2F;su&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;Now I could launch a SSH server with a script &lt;code&gt;ssh-dropbear.app&lt;&#x2F;code&gt; that executes &lt;code&gt;dropbear&lt;&#x2F;code&gt; like:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#0f1419;color:#bfbab0;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;#!&#x2F;bin&#x2F;sh
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;&#x2F;mnt&#x2F;secure&#x2F;su&lt;&#x2F;span&gt;&lt;span&gt; &#x2F;sbin&#x2F;dropbear&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt; -p&lt;&#x2F;span&gt;&lt;span&gt; 2468&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt; -G &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;quot;&amp;quot;
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;The installed dropbear version does not accept all key algorithms though,
+I personally had trouble connecting at first.
+After some research, I came up with this SSH config that should work in most cases:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#0f1419;color:#bfbab0;&quot;&gt;&lt;code&gt;&lt;span&gt;Host pocketbook
+&lt;&#x2F;span&gt;&lt;span&gt;  HostName &amp;lt;device-ip&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;  Port 2468
+&lt;&#x2F;span&gt;&lt;span&gt;  User root
+&lt;&#x2F;span&gt;&lt;span&gt;  HostKeyAlgorithms +ssh-rsa
+&lt;&#x2F;span&gt;&lt;span&gt;  PubKeyAcceptedAlgorithms +ssh-rsa
+&lt;&#x2F;span&gt;&lt;span&gt;  PubkeyAuthentication=no
+&lt;&#x2F;span&gt;&lt;span&gt;  StrictHostKeyChecking=no
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;The SSH server should not be launched when the device is connected to non-trusted networks though
+because anyone could connect to it as root without any authentication.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;app-transfer&quot;&gt;App transfer&lt;&#x2F;h2&gt;
+&lt;p&gt;Applications with the file suffix &lt;code&gt;.app&lt;&#x2F;code&gt; placed into the &lt;code&gt;&#x2F;mnt&#x2F;ext1&#x2F;applications&lt;&#x2F;code&gt; directory
+(that appears as only &lt;code&gt;applications&lt;&#x2F;code&gt; when the device is connected through USB)
+are automatically shown in the applications launcher.
+They can be binaries but also shell scripts.
+This is very useful to create some tools to make the development easier.&lt;&#x2F;p&gt;
+&lt;p&gt;To iterate fast I wanted to be able to transfer the built application to the device
+without any physical tasks like plugging a USB-cable in and out.&lt;&#x2F;p&gt;
+&lt;p&gt;To do that I utilized &lt;code&gt;netcat&lt;&#x2F;code&gt;, a tool for creating ad-hoc network sockets and transmit arbitrary data over them.
+The tool is already present on the device,
+so I only needed to create scripts for the developer machine &amp;amp; device that send and receive applications.&lt;&#x2F;p&gt;
+&lt;div style=&quot;display: grid; grid-template-columns: 50% 50%; column-gap: 12px;&quot;&gt;
+&lt;div style=&quot;grid-column: 1&quot;&gt;
+Sender:
+&lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#0f1419;color:#bfbab0;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;color:#f07178;&quot;&gt;echo &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;quot;Sending application name..&amp;quot;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f07178;&quot;&gt;echo &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;&amp;lt;&lt;&#x2F;span&gt;&lt;span&gt;app-name&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;&amp;gt; | &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;nc &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;&amp;lt;&lt;&#x2F;span&gt;&lt;span&gt;device-ip&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;&amp;gt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt;19991
+&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;# The e-reader needs a bit of time to re-launch &amp;#39;nc&amp;#39;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;sleep&lt;&#x2F;span&gt;&lt;span&gt; 3
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f07178;&quot;&gt;echo &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;quot;Sending application content..&amp;quot;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;nc &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;&amp;lt;&lt;&#x2F;span&gt;&lt;span&gt;device-ip&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;&amp;gt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt;19991 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;&amp;lt;&lt;&#x2F;span&gt;&lt;span&gt; &#x2F;local&#x2F;path&#x2F;to&#x2F;binary
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;&#x2F;div&gt;
+&lt;div style=&quot;grid-column: 2&quot;&gt;
+Receiver:
+&lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#0f1419;color:#bfbab0;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;color:#f07178;&quot;&gt;echo &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;quot;Listening for application name..&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;LOCAL_APP_NAME&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;$&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;nc&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt; -l -p&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt; 19991 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;| &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;tr&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt; -d &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;#39; &amp;#39;&lt;&#x2F;span&gt;&lt;span&gt;)
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f07178;&quot;&gt;echo &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;quot;Received application name : &amp;#39;$&lt;&#x2F;span&gt;&lt;span&gt;LOCAL_APP_NAME&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;#39;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;LOCAL_APP_PATH&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;quot;&#x2F;mnt&#x2F;ext1&#x2F;applications&#x2F;$&lt;&#x2F;span&gt;&lt;span&gt;LOCAL_APP_NAME&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f07178;&quot;&gt;echo &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;quot;Listening for application content..&amp;quot;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;nc&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt; -l -p&lt;&#x2F;span&gt;&lt;span&gt; 19991 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;&amp;gt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;quot;$&lt;&#x2F;span&gt;&lt;span&gt;LOCAL_APP_PATH&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f07178;&quot;&gt;echo &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;quot;Application has been saved to &amp;#39;$&lt;&#x2F;span&gt;&lt;span&gt;LOCAL_APP_PATH&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;#39;&amp;quot;
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+&lt;h2 id=&quot;debugging&quot;&gt;Debugging&lt;&#x2F;h2&gt;
+&lt;p&gt;I also wanted to debug remotely with gdb.
+This is possible by: in a SSH session, launching a &lt;code&gt;gdbserver&lt;&#x2F;code&gt; session with command
+&lt;code&gt;gdbserver 0.0.0.0:10003 &#x2F;mnt&#x2F;ext1&#x2F;applications&#x2F;&amp;lt;app-name&amp;gt;.app&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;On the developer machine when using vscode for development,
+the extension &#x27;CodeLLDB&#x27; can be used for debugging Rust code.
+A &lt;code&gt;launch.json&lt;&#x2F;code&gt; configuration entry ended up looking like this:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;json&quot; style=&quot;background-color:#0f1419;color:#bfbab0;&quot; class=&quot;language-json &quot;&gt;&lt;code class=&quot;language-json&quot; data-lang=&quot;json&quot;&gt;&lt;span&gt;{
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;quot;type&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;quot;lldb&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;,
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;quot;request&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;quot;custom&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;,
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;quot;name&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;quot;remote debug &amp;lt;app-name&amp;gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;,
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;quot;targetCreateCommands&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;: &lt;&#x2F;span&gt;&lt;span&gt;[
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;quot;target create ${workspaceFolder}&#x2F;target&#x2F;armv7-unknown-linux-gnueabi&#x2F;debug&#x2F;examples&#x2F;&amp;lt;app-name&amp;gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;    ]&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;,
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;quot;processCreateCommands&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;: &lt;&#x2F;span&gt;&lt;span&gt;[
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;quot;gdb-remote &amp;lt;device-ip&amp;gt;:10003&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;    ]
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Now I could step through code, set breakpoints and so on.
+Of course it&#x27;s also possible to use the gdb CLI directly.&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;inkview-rs-improvements&quot;&gt;inkview-rs Improvements&lt;&#x2F;h1&gt;
+&lt;p&gt;The &lt;code&gt;inkview-rs&lt;&#x2F;code&gt; bindings crate needed additional features and fixes to satisfy my needs.
+For one, it needed to be extended to the SDK version &lt;code&gt;v5.19&lt;&#x2F;code&gt; that is supported on the Touch Lux 3.
+Previously, only bindings for &lt;code&gt;v6.5&lt;&#x2F;code&gt; were generated.
+These API versions can now be switched through cargo features &lt;code&gt;sdk-5-19&lt;&#x2F;code&gt; and &lt;code&gt;sdk-6-5&lt;&#x2F;code&gt; at compile time.&lt;&#x2F;p&gt;
+&lt;p&gt;I added additional safe rust wrappers for common tasks like a fast screen update and a wrapper for the dialog API.
+The library also previously had issues with an vertical draw offset which could be fixed
+by an setting a specific application flag through the pocketbook SDK.&lt;&#x2F;p&gt;
+&lt;p&gt;Additionally I added an adapter crate &lt;code&gt;inkview-eg&lt;&#x2F;code&gt; which implements the
+&lt;a href=&quot;https:&#x2F;&#x2F;docs.rs&#x2F;embedded-graphics-core&#x2F;latest&#x2F;embedded_graphics_core&#x2F;draw_target&#x2F;trait.DrawTarget.html&quot;&gt;embedded_graphics::DrawTarget&lt;&#x2F;a&gt;
+trait for the display.
+Doing that enables drawing with convenient API for graphics primitives and even things like text and bitmap images.&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;pb-cheatsheet-application&quot;&gt;pb-cheatsheet Application&lt;&#x2F;h1&gt;
+&lt;h2 id=&quot;overview&quot;&gt;Overview&lt;&#x2F;h2&gt;
+&lt;p&gt;Establishing a solid development environment and improvements to the inkview-rs library took a few weeks
+while working on-and-off on it.
+But after that I could focus on the application itself.
+The code is entirely open-source under &#x27;GPLv3&#x27; and can be found &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;flxzt&#x2F;pb-cheatsheet&quot;&gt;here&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;The host side is a CLI tool that is able to communicate with the GRPC server of the client.
+It should have the following features:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;ability to upload cheatsheets (images) to the client&lt;&#x2F;li&gt;
+&lt;li&gt;register&#x2F;delete associated tags&lt;&#x2F;li&gt;
+&lt;li&gt;retrieve device state&lt;&#x2F;li&gt;
+&lt;li&gt;ability to take screenshots and automatically upload them to the client&lt;&#x2F;li&gt;
+&lt;li&gt;continuously report the current focused window&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;The client is a pocketbook specific application that holds and manages state and draws to the screen.
+For communication with the host it starts a GRPC server.
+It should be possible to display some stats like the reported focused window by pressing the &lt;code&gt;Menu&lt;&#x2F;code&gt; button.
+There should also be three distinct modes as UI:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;Manual&lt;&#x2F;code&gt; : the user can manually cycle through the uploaded cheatsheets&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;code&gt;Automatic WM-Class&lt;&#x2F;code&gt; : display cheatsheets for which tags are registered that match with the tags
+registered to the reported focused window class.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;code&gt;Screenshot&lt;&#x2F;code&gt; : display the last uploaded screenshot&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;Now let&#x27;s get into the details of how all of this is actually implemented.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;host&quot;&gt;Host&lt;&#x2F;h2&gt;
+&lt;h3 id=&quot;cli&quot;&gt;CLI&lt;&#x2F;h3&gt;
+&lt;p&gt;The following commands are implemented:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#0f1419;color:#bfbab0;&quot;&gt;&lt;code&gt;&lt;span&gt;Usage: pb-cheatsheet-host --pb-grpc-addr &amp;lt;PB_GRPC_ADDR&amp;gt; &amp;lt;COMMAND&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;Commands:
+&lt;&#x2F;span&gt;&lt;span&gt;  report-focused-window   Continuously report focused window info to the client.
+&lt;&#x2F;span&gt;&lt;span&gt;                               Intended to be run as a service
+&lt;&#x2F;span&gt;&lt;span&gt;  get-screen-info         Get device screen info
+&lt;&#x2F;span&gt;&lt;span&gt;  get-cheatsheets-info    Get cheatsheets info
+&lt;&#x2F;span&gt;&lt;span&gt;  upload-cheatsheet       Upload a new cheatsheet that gets displayed when the added tags match the tags
+&lt;&#x2F;span&gt;&lt;span&gt;                               that are added to the wm class of the reported window.
+&lt;&#x2F;span&gt;&lt;span&gt;                               The image size is adjusted depending on the reported screen info of the client
+&lt;&#x2F;span&gt;&lt;span&gt;  remove-cheatsheet       Remove a cheatsheet
+&lt;&#x2F;span&gt;&lt;span&gt;  screenshot              Take a screenshot and upload it to the device for transient display
+&lt;&#x2F;span&gt;&lt;span&gt;  clear-screenshot        Clear the screenshot
+&lt;&#x2F;span&gt;&lt;span&gt;  add-cheatsheet-tags     Add cheatsheet tags
+&lt;&#x2F;span&gt;&lt;span&gt;  remove-cheatsheet-tags  Remove cheatsheet tags
+&lt;&#x2F;span&gt;&lt;span&gt;  add-wm-class-tags       Add wm class tags
+&lt;&#x2F;span&gt;&lt;span&gt;  remove-wm-class-tags    Remove wm class tags
+&lt;&#x2F;span&gt;&lt;span&gt;  help                    Print this message or the help of the given subcommand(s)
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;For example the output when fetching cheatsheet info looks like this:&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;blog.flxzt.net&#x2F;posts&#x2F;pb-cheatsheet&#x2F;.&#x2F;assets&#x2F;host-get-cheatsheets-info.png&quot; alt=&quot;.&#x2F;assets&#x2F;host-get-cheatsheets-info.png&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;fetching-info&quot;&gt;Fetching Info&lt;&#x2F;h3&gt;
+&lt;p&gt;Retrieving the focused window is implemented only for the Gnome desktop environment,
+because unfortunately there is no universal Wayland protocol yet
+that would enable a desktop environment independent implementation.&lt;&#x2F;p&gt;
+&lt;p&gt;The Gnome extension &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;flexagoon&#x2F;focused-window-dbus&quot;&gt;focused-window-dbus&lt;&#x2F;a&gt; must also be
+installed. It reports the focused window through a DBus interface.&lt;&#x2F;p&gt;
+&lt;p&gt;The host application uses &lt;a href=&quot;https:&#x2F;&#x2F;crates.io&#x2F;crates&#x2F;zbus&quot;&gt;zbus&lt;&#x2F;a&gt; to fetch this info from the extension.
+The core Rust code to do that looks like this:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;rust&quot; style=&quot;background-color:#0f1419;color:#bfbab0;&quot; class=&quot;language-rust &quot;&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;#&lt;&#x2F;span&gt;&lt;span&gt;[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;proxy&lt;&#x2F;span&gt;&lt;span&gt;(
+&lt;&#x2F;span&gt;&lt;span&gt;    default_service &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;quot;org.gnome.Shell&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;,
+&lt;&#x2F;span&gt;&lt;span&gt;    default_path &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;quot;&#x2F;org&#x2F;gnome&#x2F;shell&#x2F;extensions&#x2F;FocusedWindow&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;,
+&lt;&#x2F;span&gt;&lt;span&gt;    interface &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;quot;org.gnome.shell.extensions.FocusedWindow&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;)]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;trait &lt;&#x2F;span&gt;&lt;span style=&quot;color:#59c2ff;&quot;&gt;FocusedWindow &lt;&#x2F;span&gt;&lt;span&gt;{
+&lt;&#x2F;span&gt;&lt;span&gt;    async &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;get&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;&amp;amp;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt;self&lt;&#x2F;span&gt;&lt;span&gt;) &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;-&amp;gt; &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#39bae6;&quot;&gt;Result&lt;&#x2F;span&gt;&lt;span&gt;&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#39bae6;&quot;&gt;String&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;;
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;pub&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;crate&lt;&#x2F;span&gt;&lt;span&gt;) async &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;get_focused_window_info&lt;&#x2F;span&gt;&lt;span&gt;&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;&amp;#39;a&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;(
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt;connection&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;&amp;amp;&lt;&#x2F;span&gt;&lt;span&gt;Connection,
+&lt;&#x2F;span&gt;&lt;span&gt;) &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;-&amp;gt; &lt;&#x2F;span&gt;&lt;span&gt;anyhow&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;::&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#39bae6;&quot;&gt;Result&lt;&#x2F;span&gt;&lt;span&gt;&amp;lt;FocusedWindowInfo&amp;gt; {
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; proxy &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span&gt;FocusedWindowProxy&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;::&lt;&#x2F;span&gt;&lt;span&gt;new(connection)&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;.&lt;&#x2F;span&gt;&lt;span&gt;await&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;?&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;;
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; val&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;: &lt;&#x2F;span&gt;&lt;span&gt;serde_json&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;::&lt;&#x2F;span&gt;&lt;span&gt;Value &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span&gt;serde_json&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;::&lt;&#x2F;span&gt;&lt;span&gt;from_str(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;&amp;amp;&lt;&#x2F;span&gt;&lt;span&gt;proxy&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f07178;&quot;&gt;get&lt;&#x2F;span&gt;&lt;span&gt;()&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;.&lt;&#x2F;span&gt;&lt;span&gt;await&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;?&lt;&#x2F;span&gt;&lt;span&gt;)&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;?&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;;
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;&#x2F;&#x2F; ...
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;h3 id=&quot;service&quot;&gt;Service&lt;&#x2F;h3&gt;
+&lt;p&gt;The &lt;code&gt;pb-cheatsheet-host report-focused-window&lt;&#x2F;code&gt; command continuously fetches info about the current focused window
+and reports it to the client over GRPC when it changes.&lt;&#x2F;p&gt;
+&lt;p&gt;This command can be a service that is started by systemd. A suitable &lt;code&gt;.service&lt;&#x2F;code&gt; file:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;toml&quot; style=&quot;background-color:#0f1419;color:#bfbab0;&quot; class=&quot;language-toml &quot;&gt;&lt;code class=&quot;language-toml&quot; data-lang=&quot;toml&quot;&gt;&lt;span&gt;[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#59c2ff;&quot;&gt;Unit&lt;&#x2F;span&gt;&lt;span&gt;]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#59c2ff;&quot;&gt;Description&lt;&#x2F;span&gt;&lt;span&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;quot;pb-cheatsheet-host focused window reporter&amp;quot;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#59c2ff;&quot;&gt;StartLimitIntervalSec&lt;&#x2F;span&gt;&lt;span&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt;0
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#59c2ff;&quot;&gt;StartLimitBurst&lt;&#x2F;span&gt;&lt;span&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt;0
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#59c2ff;&quot;&gt;Service&lt;&#x2F;span&gt;&lt;span&gt;]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#59c2ff;&quot;&gt;Environment&lt;&#x2F;span&gt;&lt;span&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;quot;PB_GRPC_ADDR=&amp;lt;client-ip:51151&amp;gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#59c2ff;&quot;&gt;Environment&lt;&#x2F;span&gt;&lt;span&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;quot;RUST_LOG=pb-cheatsheet-host=&amp;lt;log-level&amp;gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#59c2ff;&quot;&gt;ExecStart&lt;&#x2F;span&gt;&lt;span&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff3333;&quot;&gt;%h&#x2F;.cargo&#x2F;bin&#x2F;pb-cheatsheet-host report-focused-window
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#59c2ff;&quot;&gt;Restart&lt;&#x2F;span&gt;&lt;span&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff3333;&quot;&gt;on-failure
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#59c2ff;&quot;&gt;RestartSec&lt;&#x2F;span&gt;&lt;span&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt;30
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#59c2ff;&quot;&gt;Install&lt;&#x2F;span&gt;&lt;span&gt;]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#59c2ff;&quot;&gt;WantedBy&lt;&#x2F;span&gt;&lt;span&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff3333;&quot;&gt;default.target
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;h2 id=&quot;client&quot;&gt;Client&lt;&#x2F;h2&gt;
+&lt;p&gt;The client starts a GRPC server listening to incoming procedure call requests and messages.&lt;&#x2F;p&gt;
+&lt;p&gt;It does that in an asynchronous task, which sends messages over a channel to the handler. This handler also receives
+incoming messages from the pocketbook event main loop.
+Because the pocketbook SDK is not designed to be used in an async context, both &quot;worlds&quot;,
+async and blocking, have to be combined carefully.&lt;&#x2F;p&gt;
+&lt;p&gt;The client also holds some state about the cheatsheets, their tags and the UI.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;persistence&quot;&gt;Persistence&lt;&#x2F;h3&gt;
+&lt;p&gt;The cheatsheets and the metadata containing the tags are saved as files whenever changes are made
+and when the app is closed.
+The populated save directory looks like this:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;bash&quot; style=&quot;background-color:#0f1419;color:#bfbab0;&quot; class=&quot;language-bash &quot;&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;save_dir&#x2F;
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;wm_class_tags.json &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;# JSON file containing the tags that are associated with windows
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;cheatsheet_app_1.cs &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;# Raw cheatsheet image data about &amp;lt;app1&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;cheatsheet_app_1.json &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;# Metadata about &amp;lt;app1&amp;gt; cheatsheet containing associated tags
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;# ..
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;The metadata is saved as &lt;code&gt;json&lt;&#x2F;code&gt; with &lt;a href=&quot;https:&#x2F;&#x2F;crates.io&#x2F;crates&#x2F;serde&quot;&gt;serde&lt;&#x2F;a&gt;
+and &lt;a href=&quot;https:&#x2F;&#x2F;crates.io&#x2F;crates&#x2F;serde_json&quot;&gt;serde_json&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;For the cheatsheets images serde and &lt;a href=&quot;https:&#x2F;&#x2F;crates.io&#x2F;crates&#x2F;bincode&quot;&gt;bincode&lt;&#x2F;a&gt; is used for maximizing efficiency
+for raw image data.
+The images themselves are pre-converted to 8-bit grayscale and scaled the client display resolution on the host.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;dynamic-cheatsheets-using-tags&quot;&gt;Dynamic Cheatsheets using Tags&lt;&#x2F;h3&gt;
+&lt;p&gt;The tags system works like this:&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;a href=&quot;https:&#x2F;&#x2F;blog.flxzt.net&#x2F;posts&#x2F;pb-cheatsheet&#x2F;.&#x2F;assets&#x2F;client-tags-diagram.svg&quot;&gt;&lt;img src=&quot;https:&#x2F;&#x2F;blog.flxzt.net&#x2F;posts&#x2F;pb-cheatsheet&#x2F;.&#x2F;assets&#x2F;client-tags-diagram.svg&quot; alt=&quot;&quot; &#x2F;&gt;&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;Every window class is associated with different tags grouping different cheatsheets.
+For every tag that matches, the corresponding cheatsheet is displayed. The user is able to cycle through them
+with the &lt;code&gt;Prev&lt;&#x2F;code&gt;&#x2F;&lt;code&gt;Next&lt;&#x2F;code&gt; buttons.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;screenshot-feature&quot;&gt;Screenshot feature&lt;&#x2F;h3&gt;
+&lt;video width=&quot;100%&quot; controls=&quot;controls&quot;&gt;
+  &lt;source src=&quot;&#x2F;posts&#x2F;pb-cheatsheet&#x2F;assets&#x2F;client-screenshot.mp4&quot; type=&quot;video&#x2F;mp4&quot;&gt;
+&lt;&#x2F;video&gt;
+&lt;p&gt;The host uses the &lt;a href=&quot;https:&#x2F;&#x2F;flatpak.github.io&#x2F;xdg-desktop-portal&#x2F;docs&#x2F;doc-org.freedesktop.portal.Screenshot.html&quot;&gt;XDG Desktop Screenshot Portal&lt;&#x2F;a&gt;
+to open the screenshot tool and fetch the save path.
+It then reads the image data from the path, prepares and sends it to the client.
+The client then automatically switches to the &lt;code&gt;Screenshot&lt;&#x2F;code&gt; UI mode and displays that image.
+For users of dark mode UI&#x27;s, there is the possibility to invert the screenshot colors with a flag.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;rpc&quot;&gt;RPC&lt;&#x2F;h2&gt;
+&lt;p&gt;For communication and remote procedure calls between host and client &lt;a href=&quot;https:&#x2F;&#x2F;grpc.io&#x2F;&quot;&gt;GRPC&lt;&#x2F;a&gt; is used.
+The protocol is specified in a protobuf &lt;code&gt;.proto&lt;&#x2F;code&gt; file. A snippet:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;proto&quot; style=&quot;background-color:#0f1419;color:#bfbab0;&quot; class=&quot;language-proto &quot;&gt;&lt;code class=&quot;language-proto&quot; data-lang=&quot;proto&quot;&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;syntax &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;quot;proto3&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;package &lt;&#x2F;span&gt;&lt;span style=&quot;color:#59c2ff;&quot;&gt;pb_cheatsheet&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;;
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;service &lt;&#x2F;span&gt;&lt;span style=&quot;color:#59c2ff;&quot;&gt;PbCheatsheet &lt;&#x2F;span&gt;&lt;span&gt;{
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;rpc &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;FocusedWindow&lt;&#x2F;span&gt;&lt;span&gt;(FocusedWindowInfo) &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;returns &lt;&#x2F;span&gt;&lt;span&gt;(Empty) {}
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;rpc &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;GetScreenInfo&lt;&#x2F;span&gt;&lt;span&gt;(Empty) &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;returns &lt;&#x2F;span&gt;&lt;span&gt;(ScreenInfo) {}
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;rpc &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;GetCheatsheetsInfo&lt;&#x2F;span&gt;&lt;span&gt;(Empty) &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;returns &lt;&#x2F;span&gt;&lt;span&gt;(CheatsheetsInfo) {}
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;rpc &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;UploadCheatsheet&lt;&#x2F;span&gt;&lt;span&gt;(UploadCheatsheetRequest) &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;returns &lt;&#x2F;span&gt;&lt;span&gt;(Empty) {}
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;&#x2F;&#x2F; ...
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;&#x2F;&#x2F; ...
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;The &lt;a href=&quot;https:&#x2F;&#x2F;crates.io&#x2F;crates&#x2F;tonic&quot;&gt;tonic&lt;&#x2F;a&gt; crate generates Rust code for client and server out of it.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;cheatsheets&quot;&gt;Cheatsheets&lt;&#x2F;h2&gt;
+&lt;p&gt;To create cheatsheets easily there is a typst template
+that is optimized for &#x27;keyboard-key&#x27; -&amp;gt; &#x27;functionality&#x27; pair lists,
+uses an E-Paper suitable font and scales it&#x27;s content for the lower resolution
+while reducing margins to maximize available space.&lt;&#x2F;p&gt;
+&lt;p&gt;A snippet how this template is used for a git cheatsheet:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;typst&quot; style=&quot;background-color:#0f1419;color:#bfbab0;&quot; class=&quot;language-typst &quot;&gt;&lt;code class=&quot;language-typst&quot; data-lang=&quot;typst&quot;&gt;&lt;span&gt;#import &amp;quot;.&#x2F;cheat-template.typ&amp;quot;: cheat
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;#show: cheat.with(
+&lt;&#x2F;span&gt;&lt;span&gt;  title: [Git Cheatsheet],
+&lt;&#x2F;span&gt;&lt;span&gt;  icon: image(&amp;quot;icons&#x2F;git.svg&amp;quot;),
+&lt;&#x2F;span&gt;&lt;span&gt;)
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;#table(
+&lt;&#x2F;span&gt;&lt;span&gt;  table.header[Adding changes],
+&lt;&#x2F;span&gt;&lt;span&gt;  [`git add -u &amp;lt;path&amp;gt;`], [Add all tracked files to the *staging area*.],
+&lt;&#x2F;span&gt;&lt;span&gt;  [`git add -p &amp;lt;path&amp;gt;`], [Interactively pick which files to *stage*],
+&lt;&#x2F;span&gt;&lt;span&gt;)
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;&#x2F;&#x2F; ..
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;The rendered image looks like this:&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;a href=&quot;https:&#x2F;&#x2F;blog.flxzt.net&#x2F;posts&#x2F;pb-cheatsheet&#x2F;.&#x2F;assets&#x2F;cheat-git.png&quot;&gt;&lt;img src=&quot;https:&#x2F;&#x2F;blog.flxzt.net&#x2F;posts&#x2F;pb-cheatsheet&#x2F;.&#x2F;assets&#x2F;cheat-git.png&quot; alt=&quot;&quot; &#x2F;&gt;&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;conclusion&quot;&gt;Conclusion&lt;&#x2F;h1&gt;
+&lt;p&gt;It was a lot of work, but I gained a lot of knowledge about creating a development environment and
+the additional hurdles when developing for remote embedded linux systems.
+Generating bindings that do dynamic linking and using &#x27;zigbuild&#x27; stand out as very useful tools
+to avoid most of the pain of that would come with a &#x27;regular&#x27; cross-build setup.&lt;&#x2F;p&gt;
+&lt;p&gt;I also really enjoyed using GRPC as the remote procedure call mechanism between host and client.
+It seems very efficient, well thought out with regards to forward and backwards compatibility, stable
+and on top of it, was also quite easy and enjoyable to work with.
+So it will be one of my first choices in future projects that need to do RPC.&lt;&#x2F;p&gt;
+&lt;p&gt;I think this turned out pretty well, I achieved basically all of the goals for features
+that I had planned before I started.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>ink-stroke-modeler-rs</title>
+        <published>2024-03-01T00:00:00+00:00</published>
+        <updated>2024-03-01T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              Unknown
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://blog.flxzt.net/projects/ink-stroke-modeler-rs/"/>
+        <id>https://blog.flxzt.net/projects/ink-stroke-modeler-rs/</id>
+        
+        <content type="html" xml:base="https://blog.flxzt.net/projects/ink-stroke-modeler-rs/"></content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Mercury</title>
+        <published>2023-06-01T00:00:00+00:00</published>
+        <updated>2023-06-01T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              Unknown
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://blog.flxzt.net/projects/mercury/"/>
+        <id>https://blog.flxzt.net/projects/mercury/</id>
+        
+        <content type="html" xml:base="https://blog.flxzt.net/projects/mercury/"></content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>wave</title>
+        <published>2023-03-01T00:00:00+00:00</published>
+        <updated>2023-03-01T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              Unknown
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://blog.flxzt.net/projects/wave/"/>
+        <id>https://blog.flxzt.net/projects/wave/</id>
+        
+        <content type="html" xml:base="https://blog.flxzt.net/projects/wave/"></content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Splot</title>
+        <published>2023-02-01T00:00:00+00:00</published>
+        <updated>2023-02-01T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              Unknown
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://blog.flxzt.net/projects/splot/"/>
+        <id>https://blog.flxzt.net/projects/splot/</id>
+        
+        <content type="html" xml:base="https://blog.flxzt.net/projects/splot/"></content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Motion &amp; Gesture Recognition for low-res TOF-Sensors</title>
+        <published>2022-12-18T00:00:00+00:00</published>
+        <updated>2022-12-18T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              Unknown
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://blog.flxzt.net/posts/gesture-recognition/"/>
+        <id>https://blog.flxzt.net/posts/gesture-recognition/</id>
+        
+        <content type="html" xml:base="https://blog.flxzt.net/posts/gesture-recognition/">&lt;h1 id=&quot;motivation&quot;&gt;Motivation&lt;&#x2F;h1&gt;
+&lt;p&gt;Low-cost Time-Of-Flight sensors like the &quot;ST VL53L5CX&quot; usually have low resolution SPAD arrays (e.g. 4x4 or 8x8) with
+individual zones, each measuring a distance to an object located in a section of the FOV of the sensor.
+These measurement can be processed on a MCU like a STM32 to recognize motion and gestures. For this purpose I created a
+no-std, no-alloc Rust library with C-bindings to be able to integrate it into C-based embedded codebases, such as the
+ones created by STM32CubeMX.&lt;br &#x2F;&gt;
+This blog post explains the algorithms how this library calculates positions and recognizes motions and gestures from
+the sensor values.&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;coordinates&quot;&gt;Coordinates&lt;&#x2F;h1&gt;
+&lt;p&gt;First, let&#x27;s establish how positions in relation to the sensor are represented as coordinates.&lt;&#x2F;p&gt;
+&lt;p&gt;$$
+C_{cart} =
+\begin{pmatrix}
+x: \text{distance to origin on x-axis}\newline
+y: \text{distance to origin on y-axis}\newline
+z: \text{distance to origin on z-axis}\newline
+\end{pmatrix}
+$$&lt;&#x2F;p&gt;
+&lt;p&gt;$$
+C_{spher} =
+\begin{pmatrix}
+r: \text{distance to the origin}\newline
+\theta \text{ (theta): angle to x-axis (azimuth)}\newline
+\phi \text{(phi): angle to y-axis (zenith)}\newline
+\end{pmatrix}
+$$&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;a href=&quot;https:&#x2F;&#x2F;blog.flxzt.net&#x2F;posts&#x2F;gesture-recognition&#x2F;.&#x2F;assets&#x2F;coordinates.svg&quot;&gt;&lt;img src=&quot;https:&#x2F;&#x2F;blog.flxzt.net&#x2F;posts&#x2F;gesture-recognition&#x2F;.&#x2F;assets&#x2F;coordinates.svg&quot; alt=&quot;&quot; &#x2F;&gt;&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;This spherical notation is the mathematical convention.&lt;br &#x2F;&gt;
+(reference: &lt;a href=&quot;https:&#x2F;&#x2F;mathworld.wolfram.com&#x2F;SphericalCoordinates.html&quot;&gt;mathworld.wolfram.com&#x2F;SphericalCoordinates.html&lt;&#x2F;a&gt;)&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;conversion&quot;&gt;Conversion&lt;&#x2F;h2&gt;
+&lt;p&gt;Convert between the two: From spherical to cartesian coordinates
+$$
+\begin{align}
+x &amp;amp;= r \cdot \cos(\theta) \cdot \sin(\phi)\newline
+y &amp;amp;= r \cdot \sin(\theta) \cdot \sin(\phi)\newline
+z &amp;amp;= r \cdot \cos(\phi)
+\end{align}
+$$&lt;&#x2F;p&gt;
+&lt;p&gt;and from cartesian to spherial
+$$
+\begin{align}
+\textcolor{green}{r} &amp;amp;= \sqrt{x^2 + y^2 + z^2}\newline
+\theta &amp;amp;= \arctan(y &#x2F; x)\newline
+\phi &amp;amp;= \arccos( z &#x2F; \textcolor{green}{r} )
+\end{align}
+$$&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;sensor-grid&quot;&gt;Sensor Grid&lt;&#x2F;h1&gt;
+&lt;aside style=&quot;max-width: 50%;&quot;&gt;
+    &lt;div class=&quot;aside-inner&quot;&gt;
+        &lt;a href=&quot;.&#x2F;assets&#x2F;sensor_grid.svg&quot;&gt;&lt;img src=&quot;.&#x2F;assets&#x2F;sensor_grid.svg&quot; alt=&quot;&quot; &#x2F;&gt;&lt;&#x2F;a&gt;
+    &lt;&#x2F;div&gt;
+&lt;&#x2F;aside&gt;
+&lt;p&gt;We have for each zone:&lt;&#x2F;p&gt;
+&lt;p&gt;$$
+\begin{align}
+dist_{i_x, i_y} &amp;amp;: \text{the measured distance}\newline
+i_x &amp;amp;: \text{horizontal index in the sensor grid}\newline
+i_y &amp;amp;: \text{vertical index in the sensor grid}\newline
+\end{align}
+$$&lt;&#x2F;p&gt;
+&lt;p&gt;To determine the position of the measurement in each zone, we need to calculate it with the Sensor-FOV:&lt;&#x2F;p&gt;
+&lt;p&gt;$$
+\begin{align}
+Res_{hor} &amp;amp;: \text{horizontal resolution}\newline
+Res_{vert} &amp;amp;: \text{vertical resolution}\newline
+Fov_{hor} &amp;amp;: \text{horizontal sensor field-of-view}\newline
+Fov_{vert} &amp;amp;: \text{vertical sensor field-of-view}
+\end{align}
+$$&lt;&#x2F;p&gt;
+&lt;div class=&quot;clear&quot;&gt;&lt;&#x2F;div&gt;
+&lt;p&gt;We can determine the zone angle deltas:&lt;&#x2F;p&gt;
+&lt;p&gt;$$
+\begin{align}
+a_{zone, hor} &amp;amp;= \frac{Fov_{hor}}{Res_{hor}}\newline
+a_{zone, vert} &amp;amp;= \frac{Fov_{vert}}{Res_{vert}}\newline
+\end{align}
+$$
+and then we can get the spherical coordinates:
+$$
+C_{spher, i_x, i_y} =
+\begin{pmatrix}
+\begin{align}
+r &amp;amp;= dist_{i_x, i_y}\newline
+\theta &amp;amp;= (i_x - \frac{Res_{hor}}{2}) \cdot a_{zone, hor}\newline
+\phi &amp;amp;= \frac{\pi}{2} - (i_y - \frac{Res_{vert}}{2}) \cdot a_{zone, vert}\newline
+\end{align}
+\end{pmatrix}
+$$&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;object-position&quot;&gt;Object Position&lt;&#x2F;h1&gt;
+&lt;p&gt;To determine the position of an object in front of the sensor relatively accurately even with the low resolution, we use
+the following method:&lt;br &#x2F;&gt;
+We calculate the coordinates for all zones. Then we take the one with the smallest distance $r$ as the initial position
+$C_{min}$. Because that alone is not very accurate, we need to weigh in the other measurements. We use the weighted
+average mean:&lt;&#x2F;p&gt;
+&lt;p&gt;$$
+C_{obj} =
+\frac{
+\sum_{i_x = 0, i_y = 0}^{n_x = Res_{hor}, n_y = Res_{vert}} \omega_{i_x, i_y} \cdot C_{i_x, i_y}
+}{
+\sum_{i_x = 0, i_y = 0}^{n_x = Res_{hor}, n_y = Res_{vert}} \omega_{i_x, i_y}
+}
+$$&lt;&#x2F;p&gt;
+&lt;p&gt;Now, how should this weight $\omega_{i_x, i_y}$ look like? Because the object is likely larger than the FOV of a single
+zone, it should count in neighboring zones as well. The further away a measurement is to $ C_{min} $, the less it should
+be weighted. With this criteria, we can construct a formula like this:&lt;&#x2F;p&gt;
+&lt;p&gt;$$
+\omega_{i_x, i_y}(C_{min}, C_{i_x, i_y}) = f \cdot \frac{1}{| C_{min} - C_{i_x, i_y}|}
+$$&lt;&#x2F;p&gt;
+&lt;p&gt;$f$ is a factor that determines how much the distance weighs in. This can be adjusted based on the size and distance of
+the to be detected objects and is an entirely subjective value.&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;motion-and-gesture-recognition&quot;&gt;Motion and Gesture Recognition&lt;&#x2F;h1&gt;
+&lt;p&gt;Now that we have determined the object position, we save it for every sensor readout in a vector, with the time when it
+was measured. To be able to reliably recognize gestures, this vector should hold at least ca 2 seconds of position data,
+so for a 15Hz sensor it should hold at least 30 elements, for a 60Hz sensor it should at least hold 120 elements. The
+size of course also depends on the memory constraints of the device that runs the library.&lt;br &#x2F;&gt;
+To avoid accidental recognition of far away objects, detection can be aborted if the distances are above a certain
+threshold.&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;swipes&quot;&gt;Swipes&lt;&#x2F;h1&gt;
+&lt;p&gt;To detect swipes, we look at the measurements newer than a specified time (ca 600ms) and look if the object position has
+moved horizontally more than a certain distance. To make this more robust, we only recognize the gesture if the object
+also has not moved much towards or away from the sensor.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;a href=&quot;https:&#x2F;&#x2F;blog.flxzt.net&#x2F;posts&#x2F;gesture-recognition&#x2F;.&#x2F;assets&#x2F;swipe_gesture.svg&quot;&gt;&lt;img src=&quot;https:&#x2F;&#x2F;blog.flxzt.net&#x2F;posts&#x2F;gesture-recognition&#x2F;.&#x2F;assets&#x2F;swipe_gesture.svg&quot; alt=&quot;&quot; &#x2F;&gt;&lt;&#x2F;a&gt;&lt;br &#x2F;&gt;
+&lt;span class=&quot;caption&quot;&gt;
+    The recognition of a swipe gesture
+&lt;&#x2F;span&gt;&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;static-holds&quot;&gt;Static Holds&lt;&#x2F;h1&gt;
+&lt;p&gt;Static holds are determined when the object position has not changed above a distance threshold for a specified amount
+of time.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;a href=&quot;https:&#x2F;&#x2F;blog.flxzt.net&#x2F;posts&#x2F;gesture-recognition&#x2F;.&#x2F;assets&#x2F;hold_gesture.svg&quot;&gt;&lt;img src=&quot;https:&#x2F;&#x2F;blog.flxzt.net&#x2F;posts&#x2F;gesture-recognition&#x2F;.&#x2F;assets&#x2F;hold_gesture.svg&quot; alt=&quot;&quot; &#x2F;&gt;&lt;&#x2F;a&gt;&lt;br &#x2F;&gt;
+&lt;span class=&quot;caption&quot;&gt;
+    The recognition of a hold gesture
+&lt;&#x2F;span&gt;&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;implementation&quot;&gt;Implementation&lt;&#x2F;h1&gt;
+&lt;p&gt;stay tuned for another post that shows the implementation as a no-std, no-alloc Rust library with integration into an
+existing STM32 C-based project. It will also show how HID keyboard reports are sent when a gesture is recognized, and
+how to debug the Rust library on an STM32-F4 MCU.&lt;&#x2F;p&gt;
+&lt;p&gt;The code (a STM32CubeIDE project) is already available &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;flxzt&#x2F;gestures_w_rust&quot;&gt;here&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>TinyUSB on STM32 MCU&#x27;s with STM32CubeIDE</title>
+        <published>2022-08-28T00:00:00+00:00</published>
+        <updated>2022-08-28T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              Unknown
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://blog.flxzt.net/posts/tinyusb-w-stm32cubeide/"/>
+        <id>https://blog.flxzt.net/posts/tinyusb-w-stm32cubeide/</id>
+        
+        <content type="html" xml:base="https://blog.flxzt.net/posts/tinyusb-w-stm32cubeide/">&lt;p&gt;When using the USB peripheral on STM32 MCU&#x27;s, you can choose between the vendor-provided USB stack and a third-party
+one like &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;hathach&#x2F;tinyusb&quot;&gt;TinyUSB&lt;&#x2F;a&gt;. The vendor-provided is inconvenient to use because even though
+it provides a selection of predefined classes, the code generation always overwrites any changes one might need to make
+to the stack to customize it or even to fix bugs in the implementation.
+TinyUSB has the advantage to be hardware-independent, is easy-to-use and highly customizable. Its disadvantage is that
+its integration into STM32CubeIDE and the HAL is not straight-forward. Hence this guide.&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;stmcubemx-configuration&quot;&gt;STMCubeMX configuration&lt;&#x2F;h1&gt;
+&lt;aside style=&quot;max-width: 50%;&quot;&gt;
+    &lt;div class=&quot;aside-inner&quot;&gt;
+        &lt;a href=&quot;.&#x2F;assets&#x2F;cubeide_config_usb_connectivity.png&quot;&gt;&lt;img src=&quot;.&#x2F;assets&#x2F;cubeide_config_usb_connectivity.png&quot; alt=&quot;&quot; &#x2F;&gt;&lt;&#x2F;a&gt;
+    &lt;&#x2F;div&gt;
+&lt;&#x2F;aside&gt;
+&lt;p&gt;TinyUSB uses the abstractions of the lower-level HAL for STM32 MCU&#x27;s. This is configured in CubeMX. First, the
+&lt;code&gt;USB_OTG_FS&lt;&#x2F;code&gt; peripheral in the &lt;code&gt;Connectivity&lt;&#x2F;code&gt; section needs to be enabled. Set it to &lt;code&gt;Device Only&lt;&#x2F;code&gt; and most importantly
+check the global USB interrupt in &lt;code&gt;NVIC Settings&lt;&#x2F;code&gt;. This generates the &lt;code&gt;OTG_FS_IRQHandler()&lt;&#x2F;code&gt;  interrupt callback in the
+&lt;code&gt;stm32f&amp;lt;x&amp;gt;xx_it.c&lt;&#x2F;code&gt; file, it is needed later.&lt;&#x2F;p&gt;
+&lt;p&gt;Make sure that the &lt;code&gt;USB Device&lt;&#x2F;code&gt; in &lt;code&gt;Middleware&lt;&#x2F;code&gt; is &lt;strong&gt;not&lt;&#x2F;strong&gt; enabled.&lt;&#x2F;p&gt;
+&lt;p&gt;Then the clock solver needs to be run the  in &lt;code&gt;Clock configuration&lt;&#x2F;code&gt;. After that work is done in the CubeMX tool and the
+code can be generated.&lt;&#x2F;p&gt;
+&lt;div class=&quot;clear&quot;&gt;&lt;&#x2F;div&gt;&lt;h1 id=&quot;stm32cubeide-integration&quot;&gt;STM32CubeIDE integration&lt;&#x2F;h1&gt;
+&lt;p&gt;First, the TinyUSB repository needs to be cloned into the project and enabled for linking and compilation.&lt;&#x2F;p&gt;
+&lt;p&gt;In the project root directory, execute:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;bash&quot; style=&quot;background-color:#0f1419;color:#bfbab0;&quot; class=&quot;language-bash &quot;&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;git&lt;&#x2F;span&gt;&lt;span&gt; clone https:&#x2F;&#x2F;github.com&#x2F;hathach&#x2F;tinyusb
+&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;# Or when the repository itself is managed with git
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;git&lt;&#x2F;span&gt;&lt;span&gt; submodule add https:&#x2F;&#x2F;github.com&#x2F;hathach&#x2F;tinyusb
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;TinyUSB itself uses some library submodules in &lt;code&gt;lib&lt;&#x2F;code&gt;, which need to be initialized.&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;bash&quot; style=&quot;background-color:#0f1419;color:#bfbab0;&quot; class=&quot;language-bash &quot;&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span style=&quot;color:#f07178;&quot;&gt;cd&lt;&#x2F;span&gt;&lt;span&gt; tinyusb
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;git&lt;&#x2F;span&gt;&lt;span&gt; submodule update&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt; --init --recursive&lt;&#x2F;span&gt;&lt;span&gt; lib
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;It is recommended to use a released version, so the repository needs to be checked out to a release tag (&lt;code&gt;0.14.0&lt;&#x2F;code&gt; at the
+time of writing):&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;bash&quot; style=&quot;background-color:#0f1419;color:#bfbab0;&quot; class=&quot;language-bash &quot;&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;git&lt;&#x2F;span&gt;&lt;span&gt; fetch&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt; --all --tags
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;git&lt;&#x2F;span&gt;&lt;span&gt; checkout 0.14.0
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;aside style=&quot;max-width: 50%;&quot;&gt;
+    &lt;div class=&quot;aside-inner&quot;&gt;
+        &lt;a href=&quot;.&#x2F;assets&#x2F;cubeide_properties_tinyusb_include.png&quot;&gt;&lt;img src=&quot;.&#x2F;assets&#x2F;cubeide_properties_tinyusb_include.png&quot; alt=&quot;&quot; &#x2F;&gt;&lt;&#x2F;a&gt;
+    &lt;&#x2F;div&gt;
+&lt;&#x2F;aside&gt;
+&lt;p&gt;Then the linker and compiler need to be configured. First, open the projects properties window under
+&lt;code&gt;Project-&amp;gt;Properties&lt;&#x2F;code&gt; and navigate to &lt;code&gt;C&#x2F;C++ Build-&amp;gt;Settings&lt;&#x2F;code&gt;. In the &lt;code&gt;MCU GCC Compiler-&amp;gt;Include Paths&lt;&#x2F;code&gt; view you can add
+the path to the TinyUSB source directory to include its header files.&lt;br &#x2F;&gt;
+Make sure it is added for all configurations.&lt;&#x2F;p&gt;
+&lt;p&gt;Then navigate to &lt;code&gt;C&#x2F;C++ General-&amp;gt;Paths and Symbols&lt;&#x2F;code&gt; and in &lt;code&gt;Source Location&lt;&#x2F;code&gt; add the TinyUSB source directory as well
+for all configurations.&lt;&#x2F;p&gt;
+&lt;div class=&quot;clear&quot;&gt;&lt;&#x2F;div&gt;
+&lt;p&gt;At the time of writing with &lt;code&gt;v0.14.0&lt;&#x2F;code&gt; there are two drivers for STM32 devices. Leaving them both enabled would result in
+&lt;code&gt;Symbol already defined&lt;&#x2F;code&gt; compilation errors. To prevent this, one of them needs to be disabled. This can be done by
+excluding its file with a filter. Select the added path and click on &lt;code&gt;Edit Filters&lt;&#x2F;code&gt; on the right side. Then add the
+&lt;code&gt;portable&#x2F;st&#x2F;synopsys&#x2F;dcd_synopsys.c&lt;&#x2F;code&gt; to the filter.&lt;br &#x2F;&gt;
+This disables the older driver, and the newer driver in &lt;code&gt;portable&#x2F;synopsys&#x2F;dwc2&#x2F;dcd_dwc2.c&lt;&#x2F;code&gt; gets used. By
+&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;hathach&#x2F;tinyusb&#x2F;discussions&#x2F;1436#discussioncomment-2592135&quot;&gt;developer comment&lt;&#x2F;a&gt; the older one will be
+removed at some point so this might not be necessary anymore in the future.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;a href=&quot;https:&#x2F;&#x2F;blog.flxzt.net&#x2F;posts&#x2F;tinyusb-w-stm32cubeide&#x2F;.&#x2F;assets&#x2F;cubeide_properties_tinyusb_source_location_w_filter.png&quot;&gt;&lt;img src=&quot;https:&#x2F;&#x2F;blog.flxzt.net&#x2F;posts&#x2F;tinyusb-w-stm32cubeide&#x2F;.&#x2F;assets&#x2F;cubeide_properties_tinyusb_source_location_w_filter.png&quot; alt=&quot;&quot; &#x2F;&gt;&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;code-cdc-dual-ports-example&quot;&gt;Code (CDC dual ports example)&lt;&#x2F;h1&gt;
+&lt;p&gt;To be able to use TinyUSB, it needs to be integrated in the existing code.
+For demonstration purposes the &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;hathach&#x2F;tinyusb&#x2F;tree&#x2F;master&#x2F;examples&#x2F;device&#x2F;cdc_dual_ports&quot;&gt;CDC dual ports example&lt;&#x2F;a&gt;
+will get used.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;tusb-config-h&quot;&gt;tusb_config.h&lt;&#x2F;h2&gt;
+&lt;p&gt;TinyUSB expects the &lt;code&gt;tusb_config.h&lt;&#x2F;code&gt; configuration file to be present. In there the library and the peripheral is
+configured. Create it in &lt;code&gt;Core&#x2F;Inc&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;The &lt;code&gt;CFG_TUSB_MCU&lt;&#x2F;code&gt; and &lt;code&gt;CFG_TUSB_OS&lt;&#x2F;code&gt; definitions are mandatory. Valid values for both definitions can be looked up in
+&lt;code&gt;tusb_option.h&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;c&quot; style=&quot;background-color:#0f1419;color:#bfbab0;&quot; class=&quot;language-c &quot;&gt;&lt;code class=&quot;language-c&quot; data-lang=&quot;c&quot;&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;&#x2F;&#x2F; tusb_config.h
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;&#x2F;&#x2F; ...
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;&#x2F;&#x2F; Debugging
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;#define &lt;&#x2F;span&gt;&lt;span style=&quot;color:#59c2ff;&quot;&gt;CFG_TUSB_DEBUG        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt;3
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;&#x2F;&#x2F; Enable device stack
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;#define &lt;&#x2F;span&gt;&lt;span style=&quot;color:#59c2ff;&quot;&gt;CFG_TUD_ENABLED       &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt;1
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;&#x2F;&#x2F; Endpoint size for full-speed
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;#define &lt;&#x2F;span&gt;&lt;span style=&quot;color:#59c2ff;&quot;&gt;CFG_TUD_ENDPOINT0_SIZE    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt;64
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;&#x2F;&#x2F; Enables 2 interfaces of class CDC
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;#define &lt;&#x2F;span&gt;&lt;span style=&quot;color:#59c2ff;&quot;&gt;CFG_TUD_CDC               &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt;2
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;&#x2F;&#x2F; ...
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;h2 id=&quot;usb-descriptor-c&quot;&gt;usb_descriptor.c&lt;&#x2F;h2&gt;
+&lt;p&gt;Add &lt;code&gt;usb_descriptors.c&lt;&#x2F;code&gt; in &lt;code&gt;Core&#x2F;Src&#x2F;&lt;&#x2F;code&gt;. This file is for configuring the USB descriptors.&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;c&quot; style=&quot;background-color:#0f1419;color:#bfbab0;&quot; class=&quot;language-c &quot;&gt;&lt;code class=&quot;language-c&quot; data-lang=&quot;c&quot;&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;&#x2F;&#x2F; usb_descriptor.c
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;#include &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;quot;tusb.h&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;&#x2F;&#x2F; ...
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;#define &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;_PID_MAP&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt;itf&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt;n&lt;&#x2F;span&gt;&lt;span&gt;)  ( (CFG_TUD_##itf) &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;&amp;lt;&amp;lt; &lt;&#x2F;span&gt;&lt;span&gt;(n) )
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;#define &lt;&#x2F;span&gt;&lt;span style=&quot;color:#59c2ff;&quot;&gt;USB_PID           &lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt;0x4000 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;| &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;_PID_MAP&lt;&#x2F;span&gt;&lt;span&gt;(CDC&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt;0&lt;&#x2F;span&gt;&lt;span&gt;) &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;| &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;_PID_MAP&lt;&#x2F;span&gt;&lt;span&gt;(MSC&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt;1&lt;&#x2F;span&gt;&lt;span&gt;) &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;| &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;_PID_MAP&lt;&#x2F;span&gt;&lt;span&gt;(HID&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt;2&lt;&#x2F;span&gt;&lt;span&gt;) &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;|&lt;&#x2F;span&gt;&lt;span&gt; \
+&lt;&#x2F;span&gt;&lt;span&gt;                           &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;_PID_MAP&lt;&#x2F;span&gt;&lt;span&gt;(MIDI&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt;3&lt;&#x2F;span&gt;&lt;span&gt;) &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;| &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;_PID_MAP&lt;&#x2F;span&gt;&lt;span&gt;(VENDOR&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt;4&lt;&#x2F;span&gt;&lt;span&gt;) )
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;#define &lt;&#x2F;span&gt;&lt;span style=&quot;color:#59c2ff;&quot;&gt;USB_VID   &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt;0xCafe
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;#define &lt;&#x2F;span&gt;&lt;span style=&quot;color:#59c2ff;&quot;&gt;USB_BCD   &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt;0x0200
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;&#x2F;&#x2F; ...
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#39bae6;&quot;&gt;uint8_t &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;const&lt;&#x2F;span&gt;&lt;span&gt; desc_fs_configuration[] &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;=
+&lt;&#x2F;span&gt;&lt;span&gt;{
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;&#x2F;&#x2F; Config number, interface count, string index, total length, attribute, power in mA
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;TUD_CONFIG_DESCRIPTOR&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt;1&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;,&lt;&#x2F;span&gt;&lt;span&gt; ITF_NUM_TOTAL&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt;0&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;,&lt;&#x2F;span&gt;&lt;span&gt; CONFIG_TOTAL_LEN&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt;0x00&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt;100&lt;&#x2F;span&gt;&lt;span&gt;)&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;,
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;&#x2F;&#x2F; 1st CDC: Interface number, string index, EP notification address and size, EP data address (out, in) and size.
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;TUD_CDC_DESCRIPTOR&lt;&#x2F;span&gt;&lt;span&gt;(ITF_NUM_CDC_0&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt;4&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;,&lt;&#x2F;span&gt;&lt;span&gt; EPNUM_CDC_0_NOTIF&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt;8&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;,&lt;&#x2F;span&gt;&lt;span&gt; EPNUM_CDC_0_OUT&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;,&lt;&#x2F;span&gt;&lt;span&gt; EPNUM_CDC_0_IN&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt;64&lt;&#x2F;span&gt;&lt;span&gt;)&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;,
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;&#x2F;&#x2F; 2nd CDC: Interface number, string index, EP notification address and size, EP data address (out, in) and size.
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;TUD_CDC_DESCRIPTOR&lt;&#x2F;span&gt;&lt;span&gt;(ITF_NUM_CDC_1&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt;4&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;,&lt;&#x2F;span&gt;&lt;span&gt; EPNUM_CDC_1_NOTIF&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt;8&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;,&lt;&#x2F;span&gt;&lt;span&gt; EPNUM_CDC_1_OUT&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;,&lt;&#x2F;span&gt;&lt;span&gt; EPNUM_CDC_1_IN&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt;64&lt;&#x2F;span&gt;&lt;span&gt;)&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;,
+&lt;&#x2F;span&gt;&lt;span&gt;}&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;;
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;&#x2F;&#x2F; array of pointer to string descriptors
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;char const&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;*&lt;&#x2F;span&gt;&lt;span&gt; string_desc_arr [] &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;=
+&lt;&#x2F;span&gt;&lt;span&gt;{
+&lt;&#x2F;span&gt;&lt;span&gt;  (&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;const char&lt;&#x2F;span&gt;&lt;span&gt;[]) { &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt;0x09&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt;0x04 &lt;&#x2F;span&gt;&lt;span&gt;}&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;&#x2F;&#x2F; 0: is supported language is English (0x0409)
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;quot;TinyUSB&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;,                     &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;&#x2F;&#x2F; 1: Manufacturer
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;quot;Private Inc&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;,                 &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;&#x2F;&#x2F; 2: Product
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;quot;123456&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;,                      &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;&#x2F;&#x2F; 3: Serials, should use chip ID
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;quot;TinyUSB CDC&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;,                 &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;&#x2F;&#x2F; 4: CDC Interface
+&lt;&#x2F;span&gt;&lt;span&gt;}&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;;
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;&#x2F;&#x2F; ...
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;h2 id=&quot;stm32fxxx-it-c&quot;&gt;stm32fxxx_it.c&lt;&#x2F;h2&gt;
+&lt;p&gt;As mentioned in the beginning, the code inside the global interrupt handler needs to be modified.
+In there &lt;code&gt;tud_int_handler()&lt;&#x2F;code&gt; is called to hand the handling of the interrupt to TinyUSB. By returning early, the
+&quot;normal&quot; interrupt handler code is prevented to be run, because it could interfere with TinyUSB.&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;c&quot; style=&quot;background-color:#0f1419;color:#bfbab0;&quot; class=&quot;language-c &quot;&gt;&lt;code class=&quot;language-c&quot; data-lang=&quot;c&quot;&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;&#x2F;&#x2F; stm32fxxx_it.c
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;&#x2F;&#x2F;...
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;void &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;OTG_FS_IRQHandler&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;void&lt;&#x2F;span&gt;&lt;span&gt;)
+&lt;&#x2F;span&gt;&lt;span&gt;{
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;&#x2F;* USER CODE BEGIN OTG_FS_IRQn 0 *&#x2F;
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;return &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;tud_int_handler&lt;&#x2F;span&gt;&lt;span&gt;(BOARD_DEVICE_RHPORT_NUM)&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;;
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;&#x2F;* USER CODE END OTG_FS_IRQn 0 *&#x2F;
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;HAL_PCD_IRQHandler&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;&amp;amp;&lt;&#x2F;span&gt;&lt;span&gt;hpcd_USB_OTG_FS)&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;;
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;&#x2F;* USER CODE BEGIN OTG_FS_IRQn 1 *&#x2F;
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;&#x2F;* USER CODE END OTG_FS_IRQn 1 *&#x2F;
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;&#x2F;&#x2F; ...
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;h2 id=&quot;main-c&quot;&gt;main.c&lt;&#x2F;h2&gt;
+&lt;p&gt;Then finally in &lt;code&gt;main.c&lt;&#x2F;code&gt; the library is initialized with &lt;code&gt;tusb_init()&lt;&#x2F;code&gt; after the clock and peripheral initialization
+of the HAL. In the main loop &lt;code&gt;tud_task()&lt;&#x2F;code&gt; is repeatedly called to handle all pending events in TinyUSB&#x27;s internal event
+queue.&lt;&#x2F;p&gt;
+&lt;p&gt;For the CDC example there is also some code to echo the received input from either CDC interface to both in either
+lower- and uppercase.&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;c&quot; style=&quot;background-color:#0f1419;color:#bfbab0;&quot; class=&quot;language-c &quot;&gt;&lt;code class=&quot;language-c&quot; data-lang=&quot;c&quot;&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;&#x2F;&#x2F; main.c
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;&#x2F;&#x2F; ...
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;#include &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;quot;ctype.h&amp;quot;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;#include &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;quot;tusb_config.h&amp;quot;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;#include &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;quot;tusb.h&amp;quot;
+&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;&#x2F;&#x2F; ...
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;static void &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;echo_serial_port&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#39bae6;&quot;&gt;uint8_t &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt;itf&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#39bae6;&quot;&gt;uint8_t &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt;buf&lt;&#x2F;span&gt;&lt;span&gt;[]&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#39bae6;&quot;&gt;uint32_t &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt;count&lt;&#x2F;span&gt;&lt;span&gt;)&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;static void &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;cdc_task&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;void&lt;&#x2F;span&gt;&lt;span&gt;)&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;;
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;int &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;main&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;void&lt;&#x2F;span&gt;&lt;span&gt;) {
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;&#x2F;&#x2F; ...
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;	&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;tusb_init&lt;&#x2F;span&gt;&lt;span&gt;()&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;;
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;	&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;while &lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt;1&lt;&#x2F;span&gt;&lt;span&gt;) {
+&lt;&#x2F;span&gt;&lt;span&gt;		&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;tud_task&lt;&#x2F;span&gt;&lt;span&gt;()&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;; &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;&#x2F;&#x2F; TinyUSB device task
+&lt;&#x2F;span&gt;&lt;span&gt;		
+&lt;&#x2F;span&gt;&lt;span&gt;		&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;cdc_task&lt;&#x2F;span&gt;&lt;span&gt;()&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;; &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;&#x2F;&#x2F; CDC example
+&lt;&#x2F;span&gt;&lt;span&gt;		&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;&#x2F;&#x2F; ...
+&lt;&#x2F;span&gt;&lt;span&gt;	}
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;&#x2F;&#x2F; ***
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;&#x2F;&#x2F; echo to either Serial0 or Serial1.
+&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;&#x2F;&#x2F; with Serial0 as all lower case, Serial1 as all upper case.
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;static void &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;echo_serial_port&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#39bae6;&quot;&gt;uint8_t &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt;itf&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#39bae6;&quot;&gt;uint8_t &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt;buf&lt;&#x2F;span&gt;&lt;span&gt;[]&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#39bae6;&quot;&gt;uint32_t &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt;count&lt;&#x2F;span&gt;&lt;span&gt;) {
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#39bae6;&quot;&gt;uint8_t &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;const&lt;&#x2F;span&gt;&lt;span&gt; case_diff &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;#39;a&amp;#39; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;- &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c2d94c;&quot;&gt;&amp;#39;A&amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;;
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;for &lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#39bae6;&quot;&gt;uint32_t&lt;&#x2F;span&gt;&lt;span&gt; i &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt;0&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;;&lt;&#x2F;span&gt;&lt;span&gt; i &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;&amp;lt;&lt;&#x2F;span&gt;&lt;span&gt; count&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;;&lt;&#x2F;span&gt;&lt;span&gt; i&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;++&lt;&#x2F;span&gt;&lt;span&gt;) {
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;if &lt;&#x2F;span&gt;&lt;span&gt;(itf &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;== &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt;0&lt;&#x2F;span&gt;&lt;span&gt;) {
+&lt;&#x2F;span&gt;&lt;span&gt;      &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;&#x2F;&#x2F; echo back 1st port as lower case
+&lt;&#x2F;span&gt;&lt;span&gt;      &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;if &lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f07178;&quot;&gt;isupper&lt;&#x2F;span&gt;&lt;span&gt;(buf[i]))
+&lt;&#x2F;span&gt;&lt;span&gt;        buf[i] &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;+=&lt;&#x2F;span&gt;&lt;span&gt; case_diff&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;;
+&lt;&#x2F;span&gt;&lt;span&gt;    } &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;else &lt;&#x2F;span&gt;&lt;span&gt;{
+&lt;&#x2F;span&gt;&lt;span&gt;      &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;&#x2F;&#x2F; echo back 2nd port as upper case
+&lt;&#x2F;span&gt;&lt;span&gt;      &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;if &lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f07178;&quot;&gt;islower&lt;&#x2F;span&gt;&lt;span&gt;(buf[i]))
+&lt;&#x2F;span&gt;&lt;span&gt;        buf[i] &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;-=&lt;&#x2F;span&gt;&lt;span&gt; case_diff&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;;
+&lt;&#x2F;span&gt;&lt;span&gt;    }
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;tud_cdc_n_write_char&lt;&#x2F;span&gt;&lt;span&gt;(itf&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;,&lt;&#x2F;span&gt;&lt;span&gt; buf[i])&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;;
+&lt;&#x2F;span&gt;&lt;span&gt;  }
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;tud_cdc_n_write_flush&lt;&#x2F;span&gt;&lt;span&gt;(itf)&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;;
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;&#x2F;&#x2F; USB CDC
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;static void &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;cdc_task&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;void&lt;&#x2F;span&gt;&lt;span&gt;) {
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#39bae6;&quot;&gt;uint8_t&lt;&#x2F;span&gt;&lt;span&gt; itf&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;;
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;for &lt;&#x2F;span&gt;&lt;span&gt;(itf &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt;0&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;;&lt;&#x2F;span&gt;&lt;span&gt; itf &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;&amp;lt;&lt;&#x2F;span&gt;&lt;span&gt; CFG_TUD_CDC&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;;&lt;&#x2F;span&gt;&lt;span&gt; itf&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;++&lt;&#x2F;span&gt;&lt;span&gt;) {
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;&#x2F;&#x2F; connected() check for DTR bit
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;&#x2F;&#x2F; Most but not all terminal client set this when making connection
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;&#x2F;&#x2F; if ( tud_cdc_n_connected(itf) )
+&lt;&#x2F;span&gt;&lt;span&gt;    {
+&lt;&#x2F;span&gt;&lt;span&gt;      &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;if &lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;tud_cdc_n_available&lt;&#x2F;span&gt;&lt;span&gt;(itf)) {
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#39bae6;&quot;&gt;uint8_t&lt;&#x2F;span&gt;&lt;span&gt; buf[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt;64&lt;&#x2F;span&gt;&lt;span&gt;]&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;;
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#39bae6;&quot;&gt;uint32_t&lt;&#x2F;span&gt;&lt;span&gt; count &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;tud_cdc_n_read&lt;&#x2F;span&gt;&lt;span&gt;(itf&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;,&lt;&#x2F;span&gt;&lt;span&gt; buf&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;sizeof&lt;&#x2F;span&gt;&lt;span&gt;(buf))&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;;
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;&#x2F;&#x2F; echo back to both serial ports
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;echo_serial_port&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt;0&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;,&lt;&#x2F;span&gt;&lt;span&gt; buf&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;,&lt;&#x2F;span&gt;&lt;span&gt; count)&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;;
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;echo_serial_port&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt;1&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;,&lt;&#x2F;span&gt;&lt;span&gt; buf&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;,&lt;&#x2F;span&gt;&lt;span&gt; count)&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;;
+&lt;&#x2F;span&gt;&lt;span&gt;      }
+&lt;&#x2F;span&gt;&lt;span&gt;    }
+&lt;&#x2F;span&gt;&lt;span&gt;	}
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;&#x2F;&#x2F; ...
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;h1 id=&quot;testing&quot;&gt;Testing&lt;&#x2F;h1&gt;
+&lt;p&gt;Before running the code, it is advisable to enable debugging and logging at first by setting &lt;code&gt;CFG_TUSB_DEBUG&lt;&#x2F;code&gt; to a value
+greater than zero in the configuration file. By default TinyUSB is logging with &lt;code&gt;printf()&lt;&#x2F;code&gt;. To be able to inspect these
+entries over e.g. UART, &lt;code&gt;_write()&lt;&#x2F;code&gt; can be overwritten with something like:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;c&quot; style=&quot;background-color:#0f1419;color:#bfbab0;&quot; class=&quot;language-c &quot;&gt;&lt;code class=&quot;language-c&quot; data-lang=&quot;c&quot;&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;&#x2F;&#x2F; main.c
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;&#x2F;&#x2F; ...
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;int &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;_write&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;int &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt;file&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;char &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;*&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt;ptr&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;int &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29718;&quot;&gt;len&lt;&#x2F;span&gt;&lt;span&gt;) {
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ff7733;&quot;&gt;return &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffb454;&quot;&gt;HAL_UART_Transmit&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;&amp;amp;&lt;&#x2F;span&gt;&lt;span&gt;huart2&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;, &lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#39bae6;&quot;&gt;uint8_t&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f29668;&quot;&gt;*&lt;&#x2F;span&gt;&lt;span&gt;) ptr&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;,&lt;&#x2F;span&gt;&lt;span&gt; len&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;,&lt;&#x2F;span&gt;&lt;span&gt; HAL_MAX_DELAY)&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bfbab0cc;&quot;&gt;;
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#5c6773;&quot;&gt;&#x2F;&#x2F; ...
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;aside style=&quot;max-width: 70%;&quot;&gt;
+    &lt;div class=&quot;aside-inner&quot;&gt;
+        &lt;a href=&quot;.&#x2F;assets&#x2F;cdc_example_works.png&quot;&gt;&lt;img src=&quot;.&#x2F;assets&#x2F;cdc_example_works.png&quot; alt=&quot;&quot; &#x2F;&gt;&lt;&#x2F;a&gt;
+    &lt;&#x2F;div&gt;
+&lt;&#x2F;aside&gt;
+&lt;p&gt;This is it! The code should now compile and run on the MCU. Once the USB peripheral is connected to the host,
+a USB device should appear with Vendor ID &lt;code&gt;0xCafe&lt;&#x2F;code&gt; and two CDC devices. They should appear as virtual-COM Ports in the
+&quot;Device Manager&quot; on Windows or by inspecting the output of &lt;code&gt;lsusb&lt;&#x2F;code&gt; on Linux.&lt;&#x2F;p&gt;
+&lt;p&gt;To connect to both CDC&#x27;s a serial terminal tool can be used, for example &lt;code&gt;tio&lt;&#x2F;code&gt;. On linux execute &lt;code&gt;tio &#x2F;dev&#x2F;ttyACM&amp;lt;x&amp;gt;&lt;&#x2F;code&gt;
+for both devices.&lt;br &#x2F;&gt;
+Then, whenever something is typed into one of the terminals it should be echoed by both in lower- and uppercase.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Hello from the future</title>
+        <published>2022-01-02T00:00:00+00:00</published>
+        <updated>2022-01-02T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              Unknown
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://blog.flxzt.net/posts/hello-from-the-future/"/>
+        <id>https://blog.flxzt.net/posts/hello-from-the-future/</id>
+        
+        <content type="html" xml:base="https://blog.flxzt.net/posts/hello-from-the-future/">&lt;p&gt;Well, this is actually written in the future, in November 2024.
+Here used to be a rather uninspired first &quot;Hello World&quot; blog entry,
+but I thought it would be nicer to properly welcome you to my blog.&lt;&#x2F;p&gt;
+&lt;p&gt;So, welcome!&lt;&#x2F;p&gt;
+&lt;p&gt;I am glad you have found my tiny corner of the internet interesting enough to click on this post and read through
+this.
+I used to think I needed to create a cooperate-friendly blog to put on my resume,
+but I am realizing that nobody really cares about that anyways!
+So am planning to make it more personal, to fill it more with my actual life and personal thoughts.&lt;&#x2F;p&gt;
+&lt;p&gt;I hope you enjoy.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Rnote</title>
+        <published>2022-01-01T00:00:00+00:00</published>
+        <updated>2022-01-01T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              Unknown
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://blog.flxzt.net/projects/rnote/"/>
+        <id>https://blog.flxzt.net/projects/rnote/</id>
+        
+        <content type="html" xml:base="https://blog.flxzt.net/projects/rnote/"></content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>vecdisp</title>
+        <published>2020-10-01T00:00:00+00:00</published>
+        <updated>2020-10-01T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              Unknown
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://blog.flxzt.net/projects/vecdisp/"/>
+        <id>https://blog.flxzt.net/projects/vecdisp/</id>
+        
+        <content type="html" xml:base="https://blog.flxzt.net/projects/vecdisp/"></content>
+        
+    </entry>
+</feed>
