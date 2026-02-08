@@ -55,7 +55,7 @@ and additionally Pocketbook&#x27;s &lt;a href=&quot;https:&#x2F;&#x2F;github.com
 retrieving input and interacting with their services and utilities.&lt;&#x2F;p&gt;
 &lt;p&gt;Unfortunately the publicly available SDK seems to not be regularly updated, but it still works on recent firmware.
 The actual used pocketbook E-Reader is the
-&lt;a href=&quot;https:&#x2F;&#x2F;www.pocketbook-int.com&#x2F;ge&#x2F;products&#x2F;pocketbook-touch-lux-3&quot;&gt;Touch Lux 3&lt;&#x2F;a&gt; (PB626)
+&lt;a href=&quot;https:&#x2F;&#x2F;company.pocketbook.de&#x2F;de-de&#x2F;catalog&#x2F;supportproducts-de&#x2F;touch-lux3-de&quot;&gt;Touch Lux 3&lt;&#x2F;a&gt; (PB626)
 which is now already quite old but still works fine.&lt;&#x2F;p&gt;
 &lt;h1 id=&quot;setup-build-environment&quot;&gt;Setup &amp;amp; Build environment&lt;&#x2F;h1&gt;
 &lt;h2 id=&quot;bindings&quot;&gt;Bindings&lt;&#x2F;h2&gt;
